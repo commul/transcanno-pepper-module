@@ -1,0 +1,128 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<sDocumentStructure:SDocumentGraph xmlns:sDocumentStructure="sDocumentStructure" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:saltCore="saltCore" xmi:version="2.0">
+	<labels xsi:type="saltCore:SElementId" namespace="salt" name="id" value="T::salt:/corpus3/overlap"/>
+	
+	<nodes xsi:type="sDocumentStructure:STextualDS">
+		<labels xsi:type="saltCore:SFeature" namespace="saltCommon" name="SDATA" value="T::here  text  tag"/>
+		<labels xsi:type="saltCore:SElementId" namespace="salt" name="id" value="T::salt:/corpus3/overlap#sText1"/>
+		<labels xsi:type="saltCore:SFeature" namespace="salt" name="SNAME" value="T::sText1"/>
+	</nodes>
+	<nodes xsi:type="sDocumentStructure:SToken">
+		<labels xsi:type="saltCore:SElementId" namespace="salt" name="id" value="T::salt:/corpus3/overlap#infinitive_id1"/>
+		<labels xsi:type="saltCore:SFeature" namespace="salt" name="SNAME" value="T::infinitive_id1"/>
+	</nodes>
+	<nodes xsi:type="sDocumentStructure:SToken">
+		<labels xsi:type="saltCore:SElementId" namespace="salt" name="id" value="T::salt:/corpus3/overlap#infinitive_id1_2"/>
+		<labels xsi:type="saltCore:SFeature" namespace="salt" name="SNAME" value="T::infinitive_id1"/>
+	</nodes>
+	<nodes xsi:type="sDocumentStructure:SToken">
+		<labels xsi:type="saltCore:SElementId" namespace="salt" name="id" value="T::salt:/corpus3/overlap#hey_id35"/>
+		<labels xsi:type="saltCore:SFeature" namespace="salt" name="SNAME" value="T::hey_id35"/>
+	</nodes>
+	<nodes xsi:type="sDocumentStructure:SSpan">
+		<labels xsi:type="saltCore:SAnnotation" name="mode" value="T::0"/>
+		<labels xsi:type="saltCore:SAnnotation" name="tagcode" value="T::1524141045536"/>
+		<labels xsi:type="saltCore:SFeature" namespace="salt" name="SNAME" value="T::infinitive_id1"/>
+		<labels xsi:type="saltCore:SAnnotation" name="SNAME" value="T::infinitive_id1"/>
+		<labels xsi:type="saltCore:SAnnotation" name="id" value="T::salt:/corpus3/overlap#infinitive_id1"/>
+		<labels xsi:type="saltCore:SAnnotation" name="class" value="T::medium-infinitive_id1"/>
+		<labels xsi:type="saltCore:SElementId" namespace="salt" name="id" value="T::salt:/corpus3/overlap#infinitive_id1_4"/>
+	</nodes>
+	<nodes xsi:type="sDocumentStructure:SSpan">
+		<labels xsi:type="saltCore:SAnnotation" name="mode" value="T::0"/>
+		<labels xsi:type="saltCore:SAnnotation" name="tagcode" value="T::1524141024154"/>
+		<labels xsi:type="saltCore:SFeature" namespace="salt" name="SNAME" value="T::hey_id35"/>
+		<labels xsi:type="saltCore:SAnnotation" name="SNAME" value="T::hey_id35"/>
+		<labels xsi:type="saltCore:SAnnotation" name="id" value="T::salt:/corpus3/overlap#hey_id35_4"/>
+		<labels xsi:type="saltCore:SElementId" namespace="salt" name="id" value="T::salt:/corpus3/overlap#hey_id35_4"/>
+		<labels xsi:type="saltCore:SAnnotation" name="class" value="T::medium-hey_id35"/>
+	</nodes>
+	<nodes xsi:type="sDocumentStructure:SSpan">
+		<labels xsi:type="saltCore:SAnnotation" name="SNAME" value="T::transcriptiontext"/>
+		<labels xsi:type="saltCore:SAnnotation" name="id" value="T::salt:/corpus3/overlap#transcriptiontext"/>
+		<labels xsi:type="saltCore:SElementId" namespace="salt" name="id" value="T::salt:/corpus3/overlap#transcriptiontext"/>
+		<labels xsi:type="saltCore:SFeature" namespace="salt" name="SNAME" value="T::transcriptiontext"/>
+	</nodes>
+	<nodes xsi:type="sDocumentStructure:SSpan">
+		<labels xsi:type="saltCore:SAnnotation" name="SNAME" value="T::p"/>
+		<labels xsi:type="saltCore:SAnnotation" name="id" value="T::salt:/corpus3/overlap#p"/>
+		<labels xsi:type="saltCore:SElementId" namespace="salt" name="id" value="T::salt:/corpus3/overlap#p"/>
+		<labels xsi:type="saltCore:SFeature" namespace="salt" name="SNAME" value="T::p"/>
+	</nodes>
+	<nodes xsi:type="sDocumentStructure:SSpan">
+		<labels xsi:type="saltCore:SAnnotation" name="SNAME" value="T::page"/>
+		<labels xsi:type="saltCore:SAnnotation" name="id" value="T::salt:/corpus3/overlap#page"/>
+		<labels xsi:type="saltCore:SElementId" namespace="salt" name="id" value="T::salt:/corpus3/overlap#page"/>
+		<labels xsi:type="saltCore:SFeature" namespace="salt" name="SNAME" value="T::page"/>
+	</nodes>
+	<edges xsi:type="sDocumentStructure:STextualRelation" source="//@nodes.1" target="//@nodes.0">
+		<labels xsi:type="saltCore:SFeature" namespace="salt" name="SEND" value="N::5"/>
+		<labels xsi:type="saltCore:SElementId" namespace="salt" name="id" value="T::salt:/corpus3/overlap#sTextRel1"/>
+		<labels xsi:type="saltCore:SFeature" namespace="salt" name="SSTART" value="N::0"/>
+		<labels xsi:type="saltCore:SFeature" namespace="salt" name="SNAME" value="T::sTextRel1"/>
+	</edges>
+	<edges xsi:type="sDocumentStructure:STextualRelation" source="//@nodes.2" target="//@nodes.0">
+		<labels xsi:type="saltCore:SFeature" namespace="salt" name="SEND" value="N::11"/>
+		<labels xsi:type="saltCore:SElementId" namespace="salt" name="id" value="T::salt:/corpus3/overlap#sTextRel2"/>
+		<labels xsi:type="saltCore:SFeature" namespace="salt" name="SSTART" value="N::6"/>
+		<labels xsi:type="saltCore:SFeature" namespace="salt" name="SNAME" value="T::sTextRel2"/>
+	</edges>
+	<edges xsi:type="sDocumentStructure:STextualRelation" source="//@nodes.3" target="//@nodes.0">
+		<labels xsi:type="saltCore:SFeature" namespace="salt" name="SEND" value="N::15"/>
+		<labels xsi:type="saltCore:SElementId" namespace="salt" name="id" value="T::salt:/corpus3/overlap#sTextRel3"/>
+		<labels xsi:type="saltCore:SFeature" namespace="salt" name="SSTART" value="N::12"/>
+		<labels xsi:type="saltCore:SFeature" namespace="salt" name="SNAME" value="T::sTextRel3"/>
+	</edges>
+	<edges xsi:type="sDocumentStructure:SSpanningRelation" source="//@nodes.4" target="//@nodes.1">
+		<labels xsi:type="saltCore:SElementId" namespace="salt" name="id" value="T::salt:/corpus3/overlap#sSpanRel1"/>
+		<labels xsi:type="saltCore:SFeature" namespace="salt" name="SNAME" value="T::sSpanRel1"/>
+	</edges>
+	<edges xsi:type="sDocumentStructure:SSpanningRelation" source="//@nodes.4" target="//@nodes.2">
+		<labels xsi:type="saltCore:SElementId" namespace="salt" name="id" value="T::salt:/corpus3/overlap#sSpanRel2"/>
+		<labels xsi:type="saltCore:SFeature" namespace="salt" name="SNAME" value="T::sSpanRel2"/>
+	</edges>
+	<edges xsi:type="sDocumentStructure:SSpanningRelation" source="//@nodes.5" target="//@nodes.2">
+		<labels xsi:type="saltCore:SElementId" namespace="salt" name="id" value="T::salt:/corpus3/overlap#sSpanRel3"/>
+		<labels xsi:type="saltCore:SFeature" namespace="salt" name="SNAME" value="T::sSpanRel3"/>
+	</edges>
+	<edges xsi:type="sDocumentStructure:SSpanningRelation" source="//@nodes.5" target="//@nodes.3">
+		<labels xsi:type="saltCore:SElementId" namespace="salt" name="id" value="T::salt:/corpus3/overlap#sSpanRel4"/>
+		<labels xsi:type="saltCore:SFeature" namespace="salt" name="SNAME" value="T::sSpanRel4"/>
+	</edges>
+	<edges xsi:type="sDocumentStructure:SSpanningRelation" source="//@nodes.6" target="//@nodes.1">
+		<labels xsi:type="saltCore:SElementId" namespace="salt" name="id" value="T::salt:/corpus3/overlap#sSpanRel5"/>
+		<labels xsi:type="saltCore:SFeature" namespace="salt" name="SNAME" value="T::sSpanRel5"/>
+	</edges>
+	<edges xsi:type="sDocumentStructure:SSpanningRelation" source="//@nodes.6" target="//@nodes.2">
+		<labels xsi:type="saltCore:SElementId" namespace="salt" name="id" value="T::salt:/corpus3/overlap#sSpanRel6"/>
+		<labels xsi:type="saltCore:SFeature" namespace="salt" name="SNAME" value="T::sSpanRel6"/>
+	</edges>
+	<edges xsi:type="sDocumentStructure:SSpanningRelation" source="//@nodes.6" target="//@nodes.3">
+		<labels xsi:type="saltCore:SElementId" namespace="salt" name="id" value="T::salt:/corpus3/overlap#sSpanRel7"/>
+		<labels xsi:type="saltCore:SFeature" namespace="salt" name="SNAME" value="T::sSpanRel7"/>
+	</edges>
+	<edges xsi:type="sDocumentStructure:SSpanningRelation" source="//@nodes.7" target="//@nodes.1">
+		<labels xsi:type="saltCore:SElementId" namespace="salt" name="id" value="T::salt:/corpus3/overlap#sSpanRel8"/>
+		<labels xsi:type="saltCore:SFeature" namespace="salt" name="SNAME" value="T::sSpanRel8"/>
+	</edges>
+	<edges xsi:type="sDocumentStructure:SSpanningRelation" source="//@nodes.7" target="//@nodes.2">
+		<labels xsi:type="saltCore:SElementId" namespace="salt" name="id" value="T::salt:/corpus3/overlap#sSpanRel9"/>
+		<labels xsi:type="saltCore:SFeature" namespace="salt" name="SNAME" value="T::sSpanRel9"/>
+	</edges>
+	<edges xsi:type="sDocumentStructure:SSpanningRelation" source="//@nodes.7" target="//@nodes.3">
+		<labels xsi:type="saltCore:SElementId" namespace="salt" name="id" value="T::salt:/corpus3/overlap#sSpanRel10"/>
+		<labels xsi:type="saltCore:SFeature" namespace="salt" name="SNAME" value="T::sSpanRel10"/>
+	</edges>
+	<edges xsi:type="sDocumentStructure:SSpanningRelation" source="//@nodes.8" target="//@nodes.1">
+		<labels xsi:type="saltCore:SElementId" namespace="salt" name="id" value="T::salt:/corpus3/overlap#sSpanRel11"/>
+		<labels xsi:type="saltCore:SFeature" namespace="salt" name="SNAME" value="T::sSpanRel11"/>
+	</edges>
+	<edges xsi:type="sDocumentStructure:SSpanningRelation" source="//@nodes.8" target="//@nodes.2">
+		<labels xsi:type="saltCore:SElementId" namespace="salt" name="id" value="T::salt:/corpus3/overlap#sSpanRel12"/>
+		<labels xsi:type="saltCore:SFeature" namespace="salt" name="SNAME" value="T::sSpanRel12"/>
+	</edges>
+	<edges xsi:type="sDocumentStructure:SSpanningRelation" source="//@nodes.8" target="//@nodes.3">
+		<labels xsi:type="saltCore:SElementId" namespace="salt" name="id" value="T::salt:/corpus3/overlap#sSpanRel13"/>
+		<labels xsi:type="saltCore:SFeature" namespace="salt" name="SNAME" value="T::sSpanRel13"/>
+	</edges>
+</sDocumentStructure:SDocumentGraph>
