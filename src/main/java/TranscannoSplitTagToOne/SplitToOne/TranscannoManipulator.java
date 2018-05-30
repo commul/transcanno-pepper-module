@@ -86,6 +86,7 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 		setSupplierHomepage(URI.createURI(PepperConfiguration.HOMEPAGE));
 		// TODO add a description of what your module is supposed to do
 		setDesc("The manipulator, traverses over the document-structure and prints out some information about it, like the frequencies of annotations, the number of nodes and edges and so on. ");
+		setProperties(new TranscannoManipulatorProperties());
 	}
 	/*
 	@Override
@@ -131,6 +132,19 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 	 * starting point to explain how access the several objects in Salt model.
 	 */
 	public static class TranscannoMapper extends PepperMapperImpl implements GraphTraverseHandler {
+		
+		private String annotationsUnifyingAttribute;
+		
+		/**
+		 */
+		public TranscannoMapper() {
+			super();
+			annotationsUnifyingAttribute = new TranscannoManipulatorProperties().getAnnotationsUnifyingAttribute();
+			if (annotationsUnifyingAttribute==null){
+				annotationsUnifyingAttribute = "tagcode";
+			}
+		}
+		
 		/**
 		 * Creates meta annotations, if not already exists
 		 */
@@ -148,6 +162,9 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 		 */
 		@Override
 		public DOCUMENT_STATUS mapSDocument() {
+						
+			
+					
 			SDocument doc = getDocument();
 			SDocumentGraph docGraph = doc.getDocumentGraph();
 						
@@ -155,6 +172,9 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 			HashMap<String, List <SNode> > hashmapIdenticalTagcodeSTokens = new HashMap<String, List <SNode>>();
 			//Have to find structures and tokens, not only the ones or the others
 			List <SNode> sNodes = getDocument().getDocumentGraph().getNodes();
+			
+			//TranscannoManipulatorProperties transcannoManipProperties = new TranscannoManipulatorProperties();
+			//transcannoManipProperties.getAnnotationsUnifyingAttribute();
 			
 			//Fill the hashmap with nodes having identical tagcodes
 			fillHashMapOfNodesWithIdenticalTagcodes(hashmapIdenticalTagcodeSTokens, sNodes);
@@ -183,7 +203,7 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 			//Find all the tokens contained in the structure
 			for (SStructure struct: listStructures){
 				//We exclude structures with tagcodes, because we have already taken care of them
-				if (struct.getLabel("tagcode")==null){
+				if (struct.getLabel(annotationsUnifyingAttribute)==null){
 					List <SToken> tokensArray = new ArrayList <SToken>();
 					addTokensToList((SNode) struct, tokensArray);
 
@@ -435,7 +455,7 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 					String labelValue= (String)l.getValue();	            	
 	            	String labelName= (String)l.getName();
 	            	
-	            	if (labelName=="tagcode"){
+	            	if (labelName==annotationsUnifyingAttribute){
 	            		if (hashmapIdenticalTagcodeSTokens.get(labelValue)==null){
 	            			List<SNode> listSNodes = new ArrayList<SNode>();
 	            			listSNodes.add(s);
