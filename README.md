@@ -12,3 +12,5 @@ However, it is possible to define another attribute that will allow to merge ann
 
 For example, if 2 XML tags with the same value of "id" should be merged together, while launching the TranscannoManipulator, we will define:
 AnnotationsUnifyingAttribute=id
+
+Before processing tokenises the textual data.

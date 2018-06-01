@@ -35,16 +35,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- * This is a dummy implementation of a JUnit test for testing the
- * {@link TranscannoManipulator} class. Feel free to adapt and enhance this test
- * class for real tests to check the work of your manipulator. If you are not
- * confirm with JUnit, please have a look at <a
- * href="http://www.vogella.com/tutorials/JUnit/article.html">
- * http://www.vogella.com/tutorials/JUnit/article.html</a>. <br/>
- * Please note, that the test class is derived from
- * {@link PepperManipulatorTest}. The usage of this class should simplfy your
- * work and allows you to test only your single manipulator in the Pepper
- * environment.
+ * JUnit test suite for testing the {@link TranscannoManipulator} class.
  * 
  * @author NadezdaOkinina
  */
@@ -114,8 +105,7 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 	 * Checks that if there are no annotations there are no spans.
 	 */
 	@Test
-	public void test_checkNoAnnotationsNoSpansTest() {
-		
+	public void test_checkNoAnnotationsNoSpansTest() {		
 		SCorpusGraph graph1 = SaltFactory.createSCorpusGraph();
 		SDocumentGraph dGraph = fillCorpusGraph (graph1);
 		//Create a textual DS
@@ -135,16 +125,14 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 		//Get the resulting document graph
 		SDocumentGraph docGraph2 = getResultingDocumentGraph (fixture2);
 		//Checks that there are no spans
-		assertEquals(0, docGraph2.getSpans().size());
-				
+		assertEquals(0, docGraph2.getSpans().size());				
 	}
 
 	/**
 	 * Checks that if there are no dominance relations in the initial document, there are no dominance relations in the resulting document.
 	 */
 	@Test
-	public void test_checkNoRelationsTest() {
-		
+	public void test_checkNoRelationsTest() {		
 		SCorpusGraph graph1 = SaltFactory.createSCorpusGraph();
 		SDocumentGraph dGraph = fillCorpusGraph (graph1);
 		//Create a textual DS
@@ -164,16 +152,14 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 		//Get the resulting document graph
 		SDocumentGraph docGraph2 = getResultingDocumentGraph (fixture2);
 		//Checks that there are no dominance relations
-		assertEquals(0, docGraph2.getDominanceRelations().size());
-				
+		assertEquals(0, docGraph2.getDominanceRelations().size());				
 	}
 	
 	/**
-	 * Checks if 1 annotation has been transformed into 1 span
+	 * Checks if 1 annotation has been transformed into 1 span.
 	 */
 	@Test
-	public void test_checkTransformsOneAnnotationIntoOneSpanTest() {
-		
+	public void test_checkTransformsOneAnnotationIntoOneSpanTest() {		
 		SCorpusGraph graph1 = SaltFactory.createSCorpusGraph();
 		SDocumentGraph dGraph = fillCorpusGraph (graph1);
 		
@@ -189,7 +175,6 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 		SStructure structure1 = createHeyStructure (dGraph, token2, token3);
 				
 		TranscannoManipulator fixture2 = (TranscannoManipulator) getFixture();
-		System.out.println(fixture2.toString());
 		 
 		fixture2.getSaltProject().addCorpusGraph(graph1);
 		 
@@ -200,16 +185,13 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 		SDocumentGraph docGraph2 = getResultingDocumentGraph (fixture2);
 		//Checks that there is one span
 		assertEquals(1, docGraph2.getSpans().size());
-		
-		
 	}
 	
 	/**
-	 * Checks if the span has inherited attributes from the initial text's Transc&Anno annotation
+	 * Checks if the span has inherited attributes from the initial text's Transc&Anno annotation.
 	 */
 	@Test
-	public void test_checkSpanGotAttributesFromTranscAnnoAnnotationTest() {
-		
+	public void test_checkSpanGotAttributesFromTranscAnnoAnnotationTest() {		
 		SCorpusGraph graph1 = SaltFactory.createSCorpusGraph();
 		SDocumentGraph dGraph = fillCorpusGraph (graph1);
 		
@@ -225,7 +207,6 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 		SStructure structure1 = createHeyStructure (dGraph, token2, token3);
 		
 		TranscannoManipulator fixture2 = (TranscannoManipulator) getFixture();
-		System.out.println(fixture2.toString());
 		 
 		fixture2.getSaltProject().addCorpusGraph(graph1);
 		 
@@ -245,11 +226,10 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 	}
 	
 	/**
-	 * Checks if the span has inherited attributes from the initial text's non-Transc&Anno annotation
+	 * Checks if the span has inherited attributes from the initial text's non-Transc&Anno annotation.
 	 */
 	@Test
-	public void test_checkSpanGotAttributesFromAnnotationTest() {
-		
+	public void test_checkSpanGotAttributesFromAnnotationTest() {		
 		SCorpusGraph graph1 = SaltFactory.createSCorpusGraph();
 		SDocumentGraph dGraph = fillCorpusGraph (graph1);
 		
@@ -271,7 +251,6 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 		structure1.createAnnotation(null, "attr3", "7zu7");
 		
 		TranscannoManipulator fixture2 = (TranscannoManipulator) getFixture();
-		System.out.println(fixture2.toString());
 		 
 		fixture2.getSaltProject().addCorpusGraph(graph1);
 		 
@@ -291,11 +270,10 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 	}
 	
 	/**
-	 * Checks that the manipulator has deleted 2 dominance relations
+	 * Checks that the manipulator has deleted 2 dominance relations.
 	 */
 	@Test
-	public void test_checkDeletedTwoDominanceRelationsTest() {
-		
+	public void test_checkDeletedTwoDominanceRelationsTest() {		
 		SCorpusGraph graph1 = SaltFactory.createSCorpusGraph();
 		SDocumentGraph dGraph = fillCorpusGraph (graph1);
 		
@@ -308,11 +286,9 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 		SNode token3=dGraph.getTokens().get(2);
 		
 		//Create a hey structure
-		SStructure structure1 = createHeyStructure (dGraph, token2, token3);
-		
+		SStructure structure1 = createHeyStructure (dGraph, token2, token3);		
 		
 		TranscannoManipulator fixture2 = (TranscannoManipulator) getFixture();
-		System.out.println(fixture2.toString());
 		 
 		fixture2.getSaltProject().addCorpusGraph(graph1);
 		 
@@ -322,20 +298,15 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 		//Get the resulting document graph
 		SDocumentGraph docGraph2 = getResultingDocumentGraph (fixture2);
 		
-		System.out.println(docGraph2.getDominanceRelations().size());
-		
 		//Checks that there are no dominance relations
-		assertEquals(0, docGraph2.getDominanceRelations().size());
-		
-		
+		assertEquals(0, docGraph2.getDominanceRelations().size());	
 	}
 	
 	/**
 	 * Checks if 2 overlapping Transc&Anno annotations have been transformed into 2 spans.
 	 */
 	@Test
-	public void test_checkTransformsTwoOverlappingTranscAnnoAnnotationsIntoTwoSpansTest() {
-		
+	public void test_checkTransformsTwoOverlappingTranscAnnoAnnotationsIntoTwoSpansTest() {		
 		SCorpusGraph graph1 = SaltFactory.createSCorpusGraph();
 		SDocumentGraph dGraph = fillCorpusGraph (graph1);
 		
@@ -358,11 +329,9 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 		token2.createAnnotation(null, "class", "medium-infinitive_id1");
 		
 		//Create a hey structure
-		SStructure structure1 = createHeyStructure (dGraph, token2, token3);
-		
+		SStructure structure1 = createHeyStructure (dGraph, token2, token3);		
 		
 		TranscannoManipulator fixture2 = (TranscannoManipulator) getFixture();
-		System.out.println(fixture2.toString());
 		 
 		fixture2.getSaltProject().addCorpusGraph(graph1);
 		 
@@ -373,9 +342,7 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 		SDocumentGraph docGraph2 = getResultingDocumentGraph (fixture2);
 
 		//Checks that there are 2 spans
-		assertEquals(2, docGraph2.getSpans().size());
-				
-				
+		assertEquals(2, docGraph2.getSpans().size());		
 	}
 	
 	/**
@@ -383,7 +350,6 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 	 */
 	@Test
 	public void test_checkTransformsTwoOverlappingNonTranscAnnoAnnotationsIntoThreeSpansTest() {
-		
 		SCorpusGraph graph1 = SaltFactory.createSCorpusGraph();
 		SDocumentGraph dGraph = fillCorpusGraph (graph1);
 		
@@ -413,9 +379,7 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 		structure2.createAnnotation(null, "mu", "15");
 		structure2.createAnnotation(null, "class", "cow");
 		
-		
 		TranscannoManipulator fixture2 = (TranscannoManipulator) getFixture();
-		System.out.println(fixture2.toString());
 		 
 		fixture2.getSaltProject().addCorpusGraph(graph1);
 		 
@@ -424,23 +388,17 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 		
 		//Get the resulting document graph	
 		SDocumentGraph docGraph2 = getResultingDocumentGraph (fixture2);
-		
-		List <SSpan> spansList = docGraph2.getSpans(); 
-		
-		System.out.println(docGraph2.getSpans().size());
+		List <SSpan> spansList = docGraph2.getSpans();
 		
 		//Checks that there are 3 spans
-		assertEquals(2, docGraph2.getSpans().size());
-				
-				
+		assertEquals(2, docGraph2.getSpans().size());		
 	}
 	
 	/**
 	 * Checks if flattens a hierarchical structure with 2 levels of dominance relations.
 	 */
 	@Test
-	public void test_flattensStructureTest() {
-		
+	public void test_flattensStructureTest() {		
 		SCorpusGraph graph1 = SaltFactory.createSCorpusGraph();
 		SDocumentGraph dGraph = fillCorpusGraph (graph1);
 		
@@ -474,9 +432,7 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 		structure2.createAnnotation(null, "tagcode", "1929191824199");
 		structure2.createAnnotation(null, "class", "medium-noun_id22");
 		
-		
 		TranscannoManipulator fixture2 = (TranscannoManipulator) getFixture();
-		System.out.println(fixture2.toString());
 		 
 		fixture2.getSaltProject().addCorpusGraph(graph1);
 		 
@@ -489,8 +445,58 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 		//Checks that there are 2 spans
 		assertEquals(3, docGraph2.getSpans().size());
 		assertEquals(0, docGraph2.getDominanceRelations().size());		
-				
 	}
 	
+	/**
+	 * Checks if the number of tokens remains the same.
+	 */
+	@Test
+	public void test_checkNumberTokensRemainsSameTest() {		
+		SCorpusGraph graph1 = SaltFactory.createSCorpusGraph();
+		SDocumentGraph dGraph = fillCorpusGraph (graph1);
+		
+		//Create a textual DS
+		STextualDS textualDS = dGraph.createTextualDS("here text tag");		
+		//Tokenize the text: creates 3 tokens
+		dGraph.tokenize();
+		SNode token1=dGraph.getTokens().get(0);
+		SNode token2=dGraph.getTokens().get(1);
+		SNode token3=dGraph.getTokens().get(2);
+		
+		//Create the first infinitive annotation
+		token1.createAnnotation(null, "mode", "0");
+		token1.createAnnotation(null, "tagcode", "1524141045536");
+		token1.createAnnotation(null, "class", "medium-infinitive_id1");
+		
+		//Create the second infinitive annotation
+		token2.createAnnotation(null, "mode", "0");
+		token2.createAnnotation(null, "tagcode", "1524141045536");
+		token2.createAnnotation(null, "class", "medium-infinitive_id1");
+		
+		//Create a hey structure
+		SStructure structure1 = createHeyStructure (dGraph, token2, token3);
+		
+		//Create a structure overlapping hey and the first token
+		ArrayList <SStructuredNode> structureList= new ArrayList <SStructuredNode> ();
+		structureList.add((SStructuredNode)token1);
+		structureList.add((SStructuredNode)structure1);		
+		SStructure structure2 = dGraph.createStructure(structureList);
+		structure2.createAnnotation(null, "mode", "0");
+		structure2.createAnnotation(null, "tagcode", "1929191824199");
+		structure2.createAnnotation(null, "class", "medium-noun_id22");
+		
+		TranscannoManipulator fixture2 = (TranscannoManipulator) getFixture();
+		 
+		fixture2.getSaltProject().addCorpusGraph(graph1);
+		 
+		//run your Pepper module
+		start();
+		
+		//Get the resulting document graph	
+		SDocumentGraph docGraph2 = getResultingDocumentGraph(fixture2);
+		
+		//Checks that there are 2 spans
+		assertEquals(3, docGraph2.getTokens().size());		
+	}
 
 }

@@ -54,15 +54,13 @@ import org.eclipse.emf.common.util.URI;
 import org.osgi.service.component.annotations.Component;
 
 /**
- * This is a dummy implementation to show how a {@link PepperManipulator} works.
- * Therefore it just prints out some information about a corpus like the number
- * of nodes, edges and for instance annotation frequencies. <br/>
- * This class can be used as a template for an own implementation of a
- * {@link PepperManipulator} Take a look at the TODO's and adapt the code.
- * If this is the first time, you are implementing a Pepper module, we strongly
- * recommend, to take a look into the 'Developer's Guide for Pepper modules',
- * you will find on
- * <a href="http://corpus-tools.org/pepper/">http://corpus-tools.org/pepper</a>.
+ * TranscannoManipulator flattens the structure of an input document and replaces all the annotations by spans. These spans inherit all the attributes of the annotations they derive from.
+ * If 2 or more annotations have the same tagcode, they are merged into 1 span.
+ * "tagcode" is the default name of the attribute that allows to merge 2 or more annotations into 1: if the value of "tagcode" of 2 or more annotations is the same, they are merged into 1 span.
+ *	However, it is possible to define another attribute that will allow to merge annotations when having the same value. It is defined via the AnnotationsUnifyingAttribute parameter.
+ *	For example, if 2 XML tags with the same value of "id" should be merged together, while launching the TranscannoManipulator, we will define: AnnotationsUnifyingAttribute=id
+ *
+ *	Before processing tokenises the textual data.
  * 
  * @author NadezdaOkinina
  */
@@ -71,8 +69,7 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 	// =================================================== mandatory
 	// ===================================================
 	/**
-	 * <strong>OVERRIDE THIS METHOD FOR CUSTOMIZATION</strong> <br/>
-	 * A constructor for your module. Set the coordinates, with which your
+	 * A constructor for TranscannoManipulator module. Set the coordinates, with which your
 	 * module shall be registered. The coordinates (modules name, version and
 	 * supported formats) are a kind of a fingerprint, which should make your
 	 * module unique.
@@ -81,11 +78,11 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 		super();
 		setName("TranscannoManipulator");
 		// TODO change suppliers e-mail address
-		setSupplierContact(URI.createURI(PepperConfiguration.EMAIL));
+		setSupplierContact(URI.createURI("nadezda.okinina@eurac.edu"));
 		// TODO change suppliers homepage
-		setSupplierHomepage(URI.createURI(PepperConfiguration.HOMEPAGE));
+		setSupplierHomepage(URI.createURI("https://github.com/commul/transcanno-pepper-module"));
 		// TODO add a description of what your module is supposed to do
-		setDesc("The manipulator, traverses over the document-structure and prints out some information about it, like the frequencies of annotations, the number of nodes and edges and so on. ");
+		setDesc("Flattens the document structure and replaces dominance relations by spanning relations. In case 2 structures have the same value of tagcode (or another label), merges them into 1 span.");
 		setProperties(new TranscannoManipulatorProperties());
 	}
 	/*
@@ -119,23 +116,22 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 	}
 
 	/**
-	 * This class is a dummy implementation for a mapper, to show how it works.
-	 * Pepper or more specific this dummy implementation of a Pepper module
-	 * creates one mapper object per {@link SDocument} object and
-	 * {@link SCorpus} object each. This ensures, that each of those objects is
-	 * run independently from another and runs parallelized. <br/>
-	 * The method {@link #mapSCorpus()} is supposed to handle all
-	 * {@link SCorpus} object and the method {@link #mapSDocument()} is supposed
-	 * to handle all {@link SDocument} objects. <br/>
-	 * In our dummy implementation, we just print out some information about a
-	 * corpus to system.out. This is not very useful, but might be a good
-	 * starting point to explain how access the several objects in Salt model.
+	 * TranscannoManipulator flattens the structure of an input document and replaces all the annotations by spans. These spans inherit all the attributes of the annotations they derive from.
+	 * If 2 or more annotations have the same tagcode, they are merged into 1 span.
+	 * "tagcode" is the default name of the attribute that allows to merge 2 or more annotations into 1: if the value of "tagcode" of 2 or more annotations is the same, they are merged into 1 span.
+	 *	However, it is possible to define another attribute that will allow to merge annotations when having the same value. It is defined via the AnnotationsUnifyingAttribute parameter.
+	 *	For example, if 2 XML tags with the same value of "id" should be merged together, while launching the TranscannoManipulator, we will define: AnnotationsUnifyingAttribute=id
+	 *
+	 *	Before processing tokenises the textual data.
 	 */
 	public static class TranscannoMapper extends PepperMapperImpl implements GraphTraverseHandler {
-		
+		//Will contain the name of the label that will allow to merge 2 or more structures, if they have the same value of this label.
 		private String annotationsUnifyingAttribute;
 		
 		/**
+		 * Constructor of TranscannoMapper.
+		 * Initialises the annotationsUnifyingAttribute:
+		 * 		either with the value entered by the user or with the default value "tagcode".
 		 */
 		public TranscannoMapper() {
 			super();
@@ -157,24 +153,21 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 		}
 
 		/**
-		 * Replaces XML structures by spans.
-		 * If 2 or more XML structures have identical tagcodes, they are replaced by 1 span.
+		 * Flattens the document structure.
+		 * Replaces structures by spans.
+		 * If 2 or more structures have identical tagcodes (or values of another, user-specified, attribute(=label)), they are replaced by 1 span.
+		 * Before processing tokenises the textual data.
 		 */
 		@Override
-		public DOCUMENT_STATUS mapSDocument() {
-						
-			
-					
+		public DOCUMENT_STATUS mapSDocument() {				
 			SDocument doc = getDocument();
 			SDocumentGraph docGraph = doc.getDocumentGraph();
-						
+			//Tokenises the textual data
+			docGraph.tokenize();	
 			//Will contain nodes (structures and tokens) with identical tagcodes
 			HashMap<String, List <SNode> > hashmapIdenticalTagcodeSTokens = new HashMap<String, List <SNode>>();
 			//Have to find structures and tokens, not only the ones or the others
 			List <SNode> sNodes = getDocument().getDocumentGraph().getNodes();
-			
-			//TranscannoManipulatorProperties transcannoManipProperties = new TranscannoManipulatorProperties();
-			//transcannoManipProperties.getAnnotationsUnifyingAttribute();
 			
 			//Fill the hashmap with nodes having identical tagcodes
 			fillHashMapOfNodesWithIdenticalTagcodes(hashmapIdenticalTagcodeSTokens, sNodes);
@@ -191,6 +184,7 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 			return (DOCUMENT_STATUS.COMPLETED);
 		}
 		
+				
 		/**
 		 * Replaces structures by spans.
 		 * Does not take into account structures having tagcodes (= Transc&Anno annotations), because they are taken care of in a different function.
@@ -223,7 +217,7 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 		}
 		
 		/**
-		 * Creates a new span overlapping a given list of tokens and having the caracteristics of a given node.
+		 * Creates a new span overlapping a given list of tokens and having the characteristics of a given node.
 		 *  
 		 * @param  docGraph  document graph of the document
 		 * @param  mainNode  the node that will give its name, id and labels to the span that will be created

@@ -9,15 +9,25 @@ import org.corpus_tools.pepper.modules.PepperModuleProperty;
 import org.corpus_tools.pepper.modules.exceptions.PepperModuleException;
 
 public class TranscannoManipulatorProperties extends PepperModuleProperties{
+	/**
+	 * Add the property AnnotationsUnifyingAttribute to the list of TranscannoManipulator properties.
+	 */
 	public TranscannoManipulatorProperties(){  
 		this.addProperty(new PepperModuleProperty<String>("AnnotationsUnifyingAttribute", String.class, "if 2 or more annotations have the same value of this attribute, they will be unified into 1 span by TranscannoManipulator", true));
 	}
-	//2: return value of customization property
+	
+	/**
+	 * Returns the value of the property AnnotationsUnifyingAttribute.
+	 * 
+	 * @return String the name of the attribute that will allow to merge 2 or more structures, if they have the same value of this attribute
+	 */
 	public String getAnnotationsUnifyingAttribute(){
 		return((String)this.getProperty("AnnotationsUnifyingAttribute").getValue());
 	}
 
-//3: check constraints on customization property
+	/**
+	 * Checks if the name of the AnnotationsUnifyingAttribute entered by the user is a valid XML attribute name.
+	 */
 	public boolean checkProperty(PepperModuleProperty<?> prop){
 		//calls the check of constraints in parent,
 		//for instance if a required value is set
@@ -33,6 +43,9 @@ public class TranscannoManipulatorProperties extends PepperModuleProperties{
 	return(true);
 	}
 	
+	/**
+	 * Checks if the name of the AnnotationsUnifyingAttribute entered by the user is a valid XML attribute name.
+	 */
 	private static boolean attributeNameOK (String s){
         Pattern pattern1 = Pattern.compile("[<>&]");
         Matcher matcher1 = pattern1.matcher(s);
