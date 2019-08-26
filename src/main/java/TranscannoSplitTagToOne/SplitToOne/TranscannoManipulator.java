@@ -1,7 +1,9 @@
 package TranscannoSplitTagToOne.SplitToOne;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -147,7 +149,9 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 		@Override
 		public DOCUMENT_STATUS mapSCorpus() {
 			if (getCorpus().getMetaAnnotation("date") == null) {
-				getCorpus().createMetaAnnotation(null, "date", "1989-12-17");
+				SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+				String dateString = format.format(new Date());
+				getCorpus().createMetaAnnotation(null, "date", dateString);
 			}
 			return (DOCUMENT_STATUS.COMPLETED);
 		}
@@ -180,6 +184,12 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 			
 			//Remove duplicate tokens
 			removeDuplicateTokens(docGraph);
+			
+			List <SToken> tokens = docGraph.getTokens();
+			//Delete annotations from tokens
+			for(SToken tok: tokens){
+				tok.removeAll();
+			}
 
 			return (DOCUMENT_STATUS.COMPLETED);
 		}
@@ -197,7 +207,7 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 			//Find all the tokens contained in the structure
 			for (SStructure struct: listStructures){
 				//We exclude structures with tagcodes, because we have already taken care of them
-				if (struct.getLabel(annotationsUnifyingAttribute)==null){
+				if (struct.getLabel(annotationsUnifyingAttribute)==null && !struct.getName().equals("root") && !struct.getName().equals("p")){
 					List <SToken> tokensArray = new ArrayList <SToken>();
 					addTokensToList((SNode) struct, tokensArray);
 
@@ -223,7 +233,7 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 		 * @param  mainNode  the node that will give its name, id and labels to the span that will be created
 		 * @param  overlappingTokens  list of tokens that will be overlapped by the span that will be created
 		 */
-		private void createNewSpan(SDocumentGraph docGraph, SNode mainNode, List <SToken> overlappingTokens){
+		private void createNewSpan(SDocumentGraph docGraph, SNode mainNode, List <SToken> overlappingTokens){			
 			//create span overlaping a set of tokens        
     		SSpan newSpan= docGraph.createSpan(overlappingTokens);        			
     		
@@ -233,7 +243,14 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 
     		Collection <Label> labels = mainNode.getLabels(); 
     		for (Label l: labels){
-    			newSpan.createAnnotation(null, (String)l.getName(), (String)l.getValue());
+    			if (((String)l.getName()).equals("SNAME")){
+    				newSpan.createAnnotation(null, (String)l.getValue(), (String)l.getValue());
+    			}else if (((String)l.getName()).equals("class") || ((String)l.getName()).equals("id") || ((String)l.getName()).equals("mode") || ((String)l.getName()).equals("tagcode") ){
+    				continue;
+    			}
+    			else{
+    				newSpan.createAnnotation(null, (String)l.getName(), (String)l.getValue());
+    			}
     		}
 
     		//Add the new SSpan to the documentGraph
@@ -348,12 +365,13 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
         			for (String la: labelsToRemove){
         				mainToken.removeLabel(la);
         			}
+        			
         		}
         	}
 		}
 		
 		/**
-		 * Filles a hashmap with lists of tokens pointing to the same text fragments.
+		 * Fills a hashmap with lists of tokens pointing to the same text fragments.
 		 * 
 		 * @param  hashOfTokensWithIdenticalTextualDSReferences  hashmap that will contain lists of tokens pointing to the same text fragments.
 		 * 				key: a string containing the beginning and the end positions of the TextualDS where these tokens point to
@@ -419,9 +437,8 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 
         		//Create a list of tokens contained by nodes with identical tagcodes
         		List<SToken> overlappingTokens= new ArrayList<>();        			            
-        		for (SNode node : listSNode){
+        		for (SNode node : listSNode){        			
         			addTokensToList (node, overlappingTokens);
-
         		}
 
         		//create span overlaping a set of tokens

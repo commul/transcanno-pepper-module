@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-Bnd-LastModified: 1527859177593
+Bnd-LastModified: 1566814394073
 Build-Jdk: 1.8.0_131
 Built-By: nadiushka
 Bundle-Description: Provides shared POM-data.
@@ -23,7 +23,8 @@ Import-Package: org.corpus_tools.pepper.common;version="[3.1,4)",org.cor
  common;version="[3.3,4)",org.corpus_tools.salt.core;version="[3.3,4)",o
  rg.corpus_tools.salt.graph;version="[3.3,4)",org.corpus_tools.salt.util
  ;version="[3.3,4)",org.eclipse.emf.common.util,org.slf4j
-META-INF: /home/nadiushka/pepper/SplitToOne/META-INF
+META-INF: /home/nadiushka/pepper/TranscAnnoPepperModule/transcanno-peppe
+ r-module/META-INF
 OSGI-INF: OSGI-INF
 Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.7))"
 Service-Component: OSGI-INF/service-component/*.xml

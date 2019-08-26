@@ -31,6 +31,7 @@ import org.corpus_tools.salt.core.SRelation;
 import org.corpus_tools.salt.graph.Label;
 import org.corpus_tools.salt.samples.SampleGenerator;
 import org.eclipse.emf.common.util.URI;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -219,10 +220,14 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 		assertEquals(1, docGraph2.getSpans().size());
 		
 		SSpan span = docGraph2.getSpans().get(0);
-		
+		/*
 		assertEquals("0", span.getLabel("mode").getValue());
 		assertEquals("1524141024154", span.getLabel("tagcode").getValue());
 		assertEquals("medium-hey_id35", span.getLabel("class").getValue());
+		*/
+		Assert.assertNull(span.getLabel("mode"));
+		Assert.assertNull(span.getLabel("tagcode"));
+		Assert.assertNull(span.getLabel("class"));
 	}
 	
 	/**
