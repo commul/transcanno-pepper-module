@@ -209,6 +209,14 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 				//We exclude structures with tagcodes, because we have already taken care of them
 				if (struct.getLabel(annotationsUnifyingAttribute)==null && !struct.getName().equals("root") && !struct.getName().equals("p")){
 					List <SToken> tokensArray = new ArrayList <SToken>();
+					
+					if(struct.getName().equals("div")  && struct.getLabel("class")!=null){
+						continue;
+					}
+					else if(struct.getName().equals("div")){
+						struct.setName("line");
+					}
+					
 					addTokensToList((SNode) struct, tokensArray);
 
 					//Put all those tokens into a new span
