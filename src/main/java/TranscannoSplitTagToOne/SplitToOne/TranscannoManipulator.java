@@ -167,7 +167,11 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 			SDocument doc = getDocument();
 			SDocumentGraph docGraph = doc.getDocumentGraph();
 			//Tokenises the textual data
-			docGraph.tokenize();	
+			docGraph.tokenize();
+			
+			//Transform into structures with name "line" the divs that don't contain annotations inside and therefore were not transformed into structures my GenericXMLImporter, but were transformed into spans
+			transformLineSpansWithoutAnnotationsIntoStructures(docGraph);
+			
 			//Will contain nodes (structures and tokens) with identical tagcodes
 			HashMap<String, List <SNode> > hashmapIdenticalTagcodeSTokens = new HashMap<String, List <SNode>>();
 			//Have to find structures and tokens, not only the ones or the others
@@ -194,6 +198,36 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 			return (DOCUMENT_STATUS.COMPLETED);
 		}
 		
+		/**
+		 * Transform into structures with name "line"
+		 * the divs that don't contain annotations inside and therefore were not transformed into structures my GenericXMLImporter,
+		 * but were transformed into spans.
+		 * @param  docGraph  document graph of the document
+		 */
+		private void transformLineSpansWithoutAnnotationsIntoStructures(SDocumentGraph docGraph){
+			boolean breakNow;
+			List <SSpan> spans = docGraph.getSpans();
+			for (SNode span : spans){
+				breakNow = false;
+				List <SRelation> inRelations = span.getInRelations();
+				for (SRelation inrel: inRelations){
+					Node struct = inrel.getSource();
+					Collection <Label> structLabels = struct.getLabels();
+					for (Label label: structLabels){
+						if(label.getName().equals("SNAME") && label.getValue().equals("p")){
+							SStructure structure = docGraph.createStructure((SStructuredNode)span);
+							structure.setName("line");
+							breakNow = true;
+							break;
+						}
+					}
+					if(breakNow){
+						break;
+					}
+					
+				}
+			}
+		}
 				
 		/**
 		 * Replaces structures by spans.
@@ -218,9 +252,15 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 					}
 					
 					addTokensToList((SNode) struct, tokensArray);
-
+					/*
+					System.out.println("\nin replaceStructuresWithSpans ");
+					System.out.println("struct.toString(): " + struct.toString());
+					System.out.println("tokensArray.size(): " + tokensArray.size());
+					*/
 					//Put all those tokens into a new span
-					createNewSpan(docGraph, (SNode) struct, tokensArray);
+					if (tokensArray.size() > 0){
+						createNewSpan(docGraph, (SNode) struct, tokensArray);
+					}
 				}
 
 			}
@@ -243,8 +283,14 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 		 */
 		private void createNewSpan(SDocumentGraph docGraph, SNode mainNode, List <SToken> overlappingTokens){			
 			//create span overlaping a set of tokens        
-    		SSpan newSpan= docGraph.createSpan(overlappingTokens);        			
-    		
+    		SSpan newSpan= docGraph.createSpan(overlappingTokens);
+    		/*
+    		System.out.println("\nin createNewSpan ");
+    		System.out.println("mainNode.toString(): " + mainNode.toString());
+    		System.out.println("mainNode.getName(): " + mainNode.getName());
+    		System.out.println("overlappingTokens.size(): " + overlappingTokens.size());
+    		System.out.println("newSpan.toString(): " + newSpan.toString());
+    		*/
     		//Give to the new span the caracteristics of the given node
     		newSpan.setName(mainNode.getName());
     		newSpan.setId(mainNode.getId());
@@ -450,8 +496,9 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
         		}
 
         		//create span overlaping a set of tokens
-        		createNewSpan(docGraph, mainNode, overlappingTokens);
-        		        		
+        		if (overlappingTokens.size() > 0 ){
+        			createNewSpan(docGraph, mainNode, overlappingTokens);
+        		}    		
         	}
         	return;
 		}
