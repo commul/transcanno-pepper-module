@@ -13,7 +13,7 @@ public class TranscannoManipulatorProperties extends PepperModuleProperties{
 	 * Add the property AnnotationsUnifyingAttribute to the list of TranscannoManipulator properties.
 	 */
 	public TranscannoManipulatorProperties(){  
-		this.addProperty(new PepperModuleProperty<String>("AnnotationsUnifyingAttribute", String.class, "if 2 or more annotations have the same value of this attribute, they will be unified into 1 span by TranscannoManipulator", true));
+		this.addProperty(new PepperModuleProperty<String>("AnnotationsUnifyingAttribute", String.class, "if 2 or more annotations have the same value of this attribute, they will be unified into 1 span by TranscannoManipulator", false));
 	}
 	
 	/**

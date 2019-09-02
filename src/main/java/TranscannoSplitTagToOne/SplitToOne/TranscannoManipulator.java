@@ -46,6 +46,7 @@ import org.corpus_tools.salt.core.GraphTraverseHandler;
 import org.corpus_tools.salt.core.SAnnotation;
 import org.corpus_tools.salt.core.SFeature;
 import org.corpus_tools.salt.core.SGraph.GRAPH_TRAVERSE_TYPE;
+import org.corpus_tools.salt.core.SLayer;
 import org.corpus_tools.salt.core.SNode;
 import org.corpus_tools.salt.core.SRelation;
 import org.corpus_tools.salt.core.impl.SFeatureImpl;
@@ -175,8 +176,13 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 			//Will contain nodes (structures and tokens) with identical tagcodes
 			HashMap<String, List <SNode> > hashmapIdenticalTagcodeSTokens = new HashMap<String, List <SNode>>();
 			//Have to find structures and tokens, not only the ones or the others
-			List <SNode> sNodes = getDocument().getDocumentGraph().getNodes();
 			
+			List <SNode> sNodes = getDocument().getDocumentGraph().getNodes();
+			/*
+			for(SNode n: sNodes){
+				System.out.println("node: " + n.toString());
+			}
+			*/
 			//Fill the hashmap with nodes having identical tagcodes
 			fillHashMapOfNodesWithIdenticalTagcodes(hashmapIdenticalTagcodeSTokens, sNodes);
 
@@ -194,7 +200,22 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 			for(SToken tok: tokens){
 				tok.removeAll();
 			}
-
+			
+			//Remove spans with tagcodes
+			List <SSpan> spans = docGraph.getSpans();
+			for (SNode span : spans){
+				if (span.getAnnotation(annotationsUnifyingAttribute)!=null){
+					span.removeAll();
+					/*
+					Set <SLayer> layers = span.getLayers();
+					for (SLayer l: layers){
+						span.removeLayer(l);
+					}
+					*/
+					//docGraph.removeNode(span);
+				}
+			}
+			
 			return (DOCUMENT_STATUS.COMPLETED);
 		}
 		
@@ -206,17 +227,21 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 		 */
 		private void transformLineSpansWithoutAnnotationsIntoStructures(SDocumentGraph docGraph){
 			boolean breakNow;
+			SStructure structure;
 			List <SSpan> spans = docGraph.getSpans();
 			for (SNode span : spans){
-				breakNow = false;
+				//structure = docGraph.createStructure((SStructuredNode)span);
+				//System.out.println("\nspan: " + span.toString());
 				List <SRelation> inRelations = span.getInRelations();
 				for (SRelation inrel: inRelations){
+					breakNow = false;
 					Node struct = inrel.getSource();
 					Collection <Label> structLabels = struct.getLabels();
 					for (Label label: structLabels){
 						if(label.getName().equals("SNAME") && label.getValue().equals("p")){
-							SStructure structure = docGraph.createStructure((SStructuredNode)span);
+							structure = docGraph.createStructure((SStructuredNode)span);
 							structure.setName("line");
+							//System.out.println("transformed into line");
 							breakNow = true;
 							break;
 						}
@@ -288,25 +313,70 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
     		System.out.println("\nin createNewSpan ");
     		System.out.println("mainNode.toString(): " + mainNode.toString());
     		System.out.println("mainNode.getName(): " + mainNode.getName());
+    		*/
+    		if(mainNode.getLabel("class")!= null){
+    			//System.out.println("mainNode.getLabel('class').getValue(): " + mainNode.getLabel("class").getValue().toString());
+    			newSpan.setName(mainNode.getLabel("class").getValue().toString().substring(7));
+    			newSpan.createAnnotation(null, mainNode.getLabel("class").getValue().toString().substring(7), mainNode.getLabel("class").getValue().toString().substring(7));
+        		
+    		}else{
+    			newSpan.setName(mainNode.getName());
+    			if(mainNode.getLabel("SNAME")!=null){
+    				newSpan.createAnnotation(null, mainNode.getLabel("SNAME").getValue().toString(), mainNode.getLabel("SNAME").getValue().toString());
+    			}
+    		}
+    		/*
     		System.out.println("overlappingTokens.size(): " + overlappingTokens.size());
     		System.out.println("newSpan.toString(): " + newSpan.toString());
+    		System.out.println("overlappingTokens.get(0).toString(): " + overlappingTokens.get(0).toString());
     		*/
     		//Give to the new span the caracteristics of the given node
-    		newSpan.setName(mainNode.getName());
+    		//newSpan.setName(mainNode.getLabel("class").getValue().toString());
     		newSpan.setId(mainNode.getId());
-
-    		Collection <Label> labels = mainNode.getLabels(); 
+    		
+    		//newSpan.setId(mainNode.getLabel("class").getValue().toString().substring(7));
+    		
+    		//newSpan.setName(overlappingTokens.get(0).getName());
+    		//newSpan.setId(overlappingTokens.get(0).getId());
+    		/*
+    		SToken firstToken = overlappingTokens.get(0);
+    		Set <SAnnotation> tokenAnnotations = firstToken.getAnnotations();
+    		for (SAnnotation tokAnno: tokenAnnotations){
+    			System.out.println("tokAnno: " + tokAnno.getName() + " : " + tokAnno.getValue());
+    		}
+    		*/
+    		/*
+    		Collection <Label> labels = overlappingTokens.get(0).getLabels(); 
     		for (Label l: labels){
     			if (((String)l.getName()).equals("SNAME")){
     				newSpan.createAnnotation(null, (String)l.getValue(), (String)l.getValue());
-    			}else if (((String)l.getName()).equals("class") || ((String)l.getName()).equals("id") || ((String)l.getName()).equals("mode") || ((String)l.getName()).equals("tagcode") ){
+    			}else if (((String)l.getName()).equals("class") || ((String)l.getName()).equals("id") || ((String)l.getName()).equals("mode") || ((String)l.getName()).equals(annotationsUnifyingAttribute) ){
     				continue;
     			}
     			else{
     				newSpan.createAnnotation(null, (String)l.getName(), (String)l.getValue());
     			}
     		}
-
+    		*/
+    		Collection <Label> labels = mainNode.getLabels();
+    		//labels = mainNode.getLabels();
+    		for (Label l: labels){
+    			if (((String)l.getName()).equals("SNAME")){
+    				//newSpan.createAnnotation(null, (String)l.getValue(), (String)l.getValue());
+    				continue;
+    			}else if (((String)l.getName()).equals("class")){
+    				//newSpan.setName(((String)l.getValue()).substring(6));
+    				continue;
+    			}else if (((String)l.getName()).equals("id") || ((String)l.getName()).equals("mode") || ((String)l.getName()).equals(annotationsUnifyingAttribute) ){
+    				continue;
+    			}
+    			else{
+    				newSpan.createAnnotation(null, (String)l.getName(), (String)l.getValue());
+    			}
+    		}
+    		
+    		//System.out.println("newSpan.toString() with annos: " + newSpan.toString());
+    		
     		//Add the new SSpan to the documentGraph
     		docGraph.addNode(newSpan);
     		return;
@@ -491,7 +561,7 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 
         		//Create a list of tokens contained by nodes with identical tagcodes
         		List<SToken> overlappingTokens= new ArrayList<>();        			            
-        		for (SNode node : listSNode){        			
+        		for (SNode node : listSNode){
         			addTokensToList (node, overlappingTokens);
         		}
 
@@ -524,6 +594,7 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 	            	if (labelName==annotationsUnifyingAttribute){
 	            		if (hashmapIdenticalTagcodeSTokens.get(labelValue)==null){
 	            			List<SNode> listSNodes = new ArrayList<SNode>();
+	            			//System.out.println("will be mainnode: " + s.toString());
 	            			listSNodes.add(s);
 	            			hashmapIdenticalTagcodeSTokens.put(labelValue, listSNodes);
 	            		}else{

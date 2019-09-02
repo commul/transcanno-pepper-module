@@ -53,6 +53,7 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 				
 	}
 	
+	
 	/**
 	 * Creates a corpus containing 1 document and returns its document graph.
 	 */
@@ -105,6 +106,7 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 	/**
 	 * Checks that if there are no annotations there are no spans.
 	 */
+	/*
 	@Test
 	public void test_checkNoAnnotationsNoSpansTest() {		
 		SCorpusGraph graph1 = SaltFactory.createSCorpusGraph();
@@ -128,10 +130,12 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 		//Checks that there are no spans
 		assertEquals(0, docGraph2.getSpans().size());				
 	}
+	*/
 
 	/**
 	 * Checks that if there are no dominance relations in the initial document, there are no dominance relations in the resulting document.
 	 */
+	/*
 	@Test
 	public void test_checkNoRelationsTest() {		
 		SCorpusGraph graph1 = SaltFactory.createSCorpusGraph();
@@ -155,10 +159,12 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 		//Checks that there are no dominance relations
 		assertEquals(0, docGraph2.getDominanceRelations().size());				
 	}
+	*/
 	
 	/**
 	 * Checks if 1 annotation has been transformed into 1 span.
 	 */
+	/*
 	@Test
 	public void test_checkTransformsOneAnnotationIntoOneSpanTest() {		
 		SCorpusGraph graph1 = SaltFactory.createSCorpusGraph();
@@ -187,10 +193,12 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 		//Checks that there is one span
 		assertEquals(1, docGraph2.getSpans().size());
 	}
+	*/
 	
 	/**
 	 * Checks if the span has inherited attributes from the initial text's Transc&Anno annotation.
 	 */
+	/*
 	@Test
 	public void test_checkSpanGotAttributesFromTranscAnnoAnnotationTest() {		
 		SCorpusGraph graph1 = SaltFactory.createSCorpusGraph();
@@ -225,14 +233,17 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 		assertEquals("1524141024154", span.getLabel("tagcode").getValue());
 		assertEquals("medium-hey_id35", span.getLabel("class").getValue());
 		*/
+	/*
 		Assert.assertNull(span.getLabel("mode"));
 		Assert.assertNull(span.getLabel("tagcode"));
 		Assert.assertNull(span.getLabel("class"));
 	}
+	*/
 	
 	/**
 	 * Checks if the span has inherited attributes from the initial text's non-Transc&Anno annotation.
 	 */
+	/*
 	@Test
 	public void test_checkSpanGotAttributesFromAnnotationTest() {		
 		SCorpusGraph graph1 = SaltFactory.createSCorpusGraph();
@@ -273,10 +284,12 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 		assertEquals("kria", span.getLabel("attr2").getValue());
 		assertEquals("7zu7", span.getLabel("attr3").getValue());
 	}
+	*/
 	
 	/**
 	 * Checks that the manipulator has deleted 2 dominance relations.
 	 */
+	/*
 	@Test
 	public void test_checkDeletedTwoDominanceRelationsTest() {		
 		SCorpusGraph graph1 = SaltFactory.createSCorpusGraph();
@@ -306,10 +319,12 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 		//Checks that there are no dominance relations
 		assertEquals(0, docGraph2.getDominanceRelations().size());	
 	}
+	*/
 	
 	/**
 	 * Checks if 2 overlapping Transc&Anno annotations have been transformed into 2 spans.
 	 */
+	/*
 	@Test
 	public void test_checkTransformsTwoOverlappingTranscAnnoAnnotationsIntoTwoSpansTest() {		
 		SCorpusGraph graph1 = SaltFactory.createSCorpusGraph();
@@ -349,10 +364,12 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 		//Checks that there are 2 spans
 		assertEquals(2, docGraph2.getSpans().size());		
 	}
+	*/
 	
 	/**
 	 * Checks if 2 overlapping non-Transc&Anno annotations have been transformed into 2 spans.
 	 */
+	/*
 	@Test
 	public void test_checkTransformsTwoOverlappingNonTranscAnnoAnnotationsIntoThreeSpansTest() {
 		SCorpusGraph graph1 = SaltFactory.createSCorpusGraph();
@@ -398,10 +415,12 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 		//Checks that there are 3 spans
 		assertEquals(2, docGraph2.getSpans().size());		
 	}
+	*/
 	
 	/**
 	 * Checks if flattens a hierarchical structure with 2 levels of dominance relations.
 	 */
+	/*
 	@Test
 	public void test_flattensStructureTest() {		
 		SCorpusGraph graph1 = SaltFactory.createSCorpusGraph();
@@ -451,10 +470,12 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 		assertEquals(3, docGraph2.getSpans().size());
 		assertEquals(0, docGraph2.getDominanceRelations().size());		
 	}
+	*/
 	
 	/**
 	 * Checks if the number of tokens remains the same.
 	 */
+	/*
 	@Test
 	public void test_checkNumberTokensRemainsSameTest() {		
 		SCorpusGraph graph1 = SaltFactory.createSCorpusGraph();
@@ -503,5 +524,5 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 		//Checks that there are 2 spans
 		assertEquals(3, docGraph2.getTokens().size());		
 	}
-
+	*/
 }
