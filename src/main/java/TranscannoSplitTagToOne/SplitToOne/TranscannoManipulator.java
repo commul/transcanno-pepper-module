@@ -238,9 +238,9 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 					Node struct = inrel.getSource();
 					Collection <Label> structLabels = struct.getLabels();
 					for (Label label: structLabels){
-						if(label.getName().equals("SNAME") && label.getValue().equals("p")){
+						if(label.getName().equals("SNAME") && label.getValue().equals("p")){ //If the span is directly under <p> : page
 							structure = docGraph.createStructure((SStructuredNode)span);
-							structure.setName("line");
+							structure.setName("div");
 							//System.out.println("transformed into line");
 							breakNow = true;
 							break;
@@ -266,14 +266,24 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 			//Find all the tokens contained in the structure
 			for (SStructure struct: listStructures){
 				//We exclude structures with tagcodes, because we have already taken care of them
-				if (struct.getLabel(annotationsUnifyingAttribute)==null && !struct.getName().equals("root") && !struct.getName().equals("p")){
+				//if (struct.getLabel(annotationsUnifyingAttribute)==null && !struct.getName().equals("root") && !struct.getName().equals("p")){
+				if (struct.getLabel(annotationsUnifyingAttribute)==null && !struct.getName().equals("root")){
 					List <SToken> tokensArray = new ArrayList <SToken>();
 					
 					if(struct.getName().equals("div")  && struct.getLabel("class")!=null){
 						continue;
 					}
-					else if(struct.getName().equals("div")){
+					
+					
+					if(struct.getName().equals("div")){
 						struct.setName("line");
+						struct.removeAll();
+						struct.createAnnotation(null, "line", "line");
+					}
+					else if(struct.getName().equals("p")){
+						struct.setName("page");
+						struct.removeAll();
+						struct.createAnnotation(null, "page", "page");
 					}
 					
 					addTokensToList((SNode) struct, tokensArray);

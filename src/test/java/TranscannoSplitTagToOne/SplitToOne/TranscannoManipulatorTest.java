@@ -49,8 +49,7 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 	 */
 	@Before
 	public void setUp() {
-		setFixture(new TranscannoManipulator());
-				
+		this.setFixture(new TranscannoManipulator());
 	}
 	
 	
@@ -106,7 +105,7 @@ public class TranscannoManipulatorTest extends PepperManipulatorTest {
 	/**
 	 * Checks that if there are no annotations there are no spans.
 	 */
-	/*
+	/**
 	@Test
 	public void test_checkNoAnnotationsNoSpansTest() {		
 		SCorpusGraph graph1 = SaltFactory.createSCorpusGraph();
