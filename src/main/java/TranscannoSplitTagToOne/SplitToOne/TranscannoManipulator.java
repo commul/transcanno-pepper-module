@@ -55,6 +55,10 @@ import org.corpus_tools.salt.graph.Label;
 import org.corpus_tools.salt.graph.Node;
 import org.eclipse.emf.common.util.URI;
 import org.osgi.service.component.annotations.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * TranscannoManipulator flattens the structure of an input document and replaces all the annotations by spans. These spans inherit all the attributes of the annotations they derive from.
@@ -69,6 +73,10 @@ import org.osgi.service.component.annotations.Component;
  */
 @Component(name = "TranscannoManipulatorComponent", factory = "PepperManipulatorComponentFactory")
 public class TranscannoManipulator extends PepperManipulatorImpl {
+	
+	// the Logger
+	private final static Logger logger = LoggerFactory.getLogger(TranscannoManipulator.class);
+		
 	// =================================================== mandatory
 	// ===================================================
 	/**
@@ -164,58 +172,50 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 		 * Before processing tokenises the textual data.
 		 */
 		@Override
-		public DOCUMENT_STATUS mapSDocument() {				
-			SDocument doc = getDocument();
-			SDocumentGraph docGraph = doc.getDocumentGraph();
-			//Tokenises the textual data
-			docGraph.tokenize();
-			
-			//Transform into structures with name "line" the divs that don't contain annotations inside and therefore were not transformed into structures my GenericXMLImporter, but were transformed into spans
-			transformLineSpansWithoutAnnotationsIntoStructures(docGraph);
-			
-			//Will contain nodes (structures and tokens) with identical tagcodes
-			HashMap<String, List <SNode> > hashmapIdenticalTagcodeSTokens = new HashMap<String, List <SNode>>();
-			//Have to find structures and tokens, not only the ones or the others
-			
-			List <SNode> sNodes = getDocument().getDocumentGraph().getNodes();
-			/*
-			for(SNode n: sNodes){
-				System.out.println("node: " + n.toString());
-			}
-			*/
-			//Fill the hashmap with nodes having identical tagcodes
-			fillHashMapOfNodesWithIdenticalTagcodes(hashmapIdenticalTagcodeSTokens, sNodes);
+		public DOCUMENT_STATUS mapSDocument() {
+			try{
+				SDocument doc = getDocument();
+				SDocumentGraph docGraph = doc.getDocumentGraph();
+				//Tokenises the textual data
+				docGraph.tokenize();
 
-			//Create a span for each list of nodes having identical tagcodes and associate the tokens (pointing to words of text) to this span
-			createSpansForIdenticalTagcodes(hashmapIdenticalTagcodeSTokens, docGraph);
-            
-			//Replace all structures by spans
-			replaceStructuresWithSpans(docGraph);
-			
-			//Remove duplicate tokens
-			removeDuplicateTokens(docGraph);
-			
-			List <SToken> tokens = docGraph.getTokens();
-			//Delete annotations from tokens
-			for(SToken tok: tokens){
-				tok.removeAll();
-			}
-			
-			//Remove spans with tagcodes
-			List <SSpan> spans = docGraph.getSpans();
-			for (SNode span : spans){
-				if (span.getAnnotation(annotationsUnifyingAttribute)!=null){
-					span.removeAll();
-					/*
-					Set <SLayer> layers = span.getLayers();
-					for (SLayer l: layers){
-						span.removeLayer(l);
-					}
-					*/
-					//docGraph.removeNode(span);
+				//Transform into structures with name "line" the divs that don't contain annotations inside and therefore were not transformed into structures my GenericXMLImporter, but were transformed into spans
+				transformLineSpansWithoutAnnotationsIntoStructures(docGraph);
+
+				//Will contain nodes (structures and tokens) with identical tagcodes
+				HashMap<String, List <SNode> > hashmapIdenticalTagcodeSTokens = new HashMap<String, List <SNode>>();
+				//Have to find structures and tokens, not only the ones or the others
+
+				List <SNode> sNodes = getDocument().getDocumentGraph().getNodes();
+				
+				//Fill the hashmap with nodes having identical tagcodes
+				fillHashMapOfNodesWithIdenticalTagcodes(hashmapIdenticalTagcodeSTokens, sNodes);
+
+				//Create a span for each list of nodes having identical tagcodes and associate the tokens (pointing to words of text) to this span
+				createSpansForIdenticalTagcodes(hashmapIdenticalTagcodeSTokens, docGraph);
+
+				//Replace all structures by spans
+				replaceStructuresWithSpans(docGraph);
+
+				//Remove duplicate tokens
+				removeDuplicateTokens(docGraph);
+
+				List <SToken> tokens = docGraph.getTokens();
+				//Delete annotations from tokens
+				for(SToken tok: tokens){
+					tok.removeAll();
 				}
+
+				//Remove spans with tagcodes
+				List <SSpan> spans = docGraph.getSpans();
+				for (SNode span : spans){
+					if (span.getAnnotation(annotationsUnifyingAttribute)!=null){
+						span.removeAll();
+					}
+				}
+			}catch (NullPointerException npe){
+				logger.error("The XML document is empty. " + npe.toString());
 			}
-			
 			return (DOCUMENT_STATUS.COMPLETED);
 		}
 		
@@ -230,8 +230,6 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 			SStructure structure;
 			List <SSpan> spans = docGraph.getSpans();
 			for (SNode span : spans){
-				//structure = docGraph.createStructure((SStructuredNode)span);
-				//System.out.println("\nspan: " + span.toString());
 				List <SRelation> inRelations = span.getInRelations();
 				for (SRelation inrel: inRelations){
 					breakNow = false;
@@ -241,7 +239,6 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 						if(label.getName().equals("SNAME") && label.getValue().equals("p")){ //If the span is directly under <p> : page
 							structure = docGraph.createStructure((SStructuredNode)span);
 							structure.setName("div");
-							//System.out.println("transformed into line");
 							breakNow = true;
 							break;
 						}
@@ -282,16 +279,18 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 					}
 					else if(struct.getName().equals("p")){
 						struct.setName("page");
+						String pageNumber = "";
+						for (SAnnotation ann: struct.getAnnotations()){
+							if(ann.getName().equals("page_number")){
+								pageNumber = (String) ann.getValue();
+							}
+						}
 						struct.removeAll();
-						struct.createAnnotation(null, "page", "page");
+						struct.createAnnotation(null, "page_number", pageNumber);
 					}
 					
 					addTokensToList((SNode) struct, tokensArray);
-					/*
-					System.out.println("\nin replaceStructuresWithSpans ");
-					System.out.println("struct.toString(): " + struct.toString());
-					System.out.println("tokensArray.size(): " + tokensArray.size());
-					*/
+
 					//Put all those tokens into a new span
 					if (tokensArray.size() > 0){
 						createNewSpan(docGraph, (SNode) struct, tokensArray);
