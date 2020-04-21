@@ -96,31 +96,7 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 		setDesc("Flattens the document structure and replaces dominance relations by spanning relations. In case 2 structures have the same value of tagcode (or another label), merges them into 1 span.");
 		setProperties(new TranscannoManipulatorProperties());
 	}
-	/*
-	@Override
-    public SelfTestDesc getSelfTestDesc() {
-            return new SelfTestDesc(
-                            getResources().appendSegment("transcannomanipulator_testcorpus"),
-                            getResources().appendSegment("transcannomanipulator_testout"));
-    }
-	*/
-	/**
-	 * <strong>OVERRIDE THIS METHOD FOR CUSTOMIZATION</strong> <br/>
-	 * This method creates a customized {@link PepperMapper} object and returns
-	 * it. You can here do some additional initialisations. Thinks like setting
-	 * the {@link Identifier} of the {@link SDocument} or {@link SCorpus} object
-	 * and the {@link URI} resource is done by the framework (or more in detail
-	 * in method {@link #start()}). The parameter <code>Identifier</code>, if a
-	 * {@link PepperMapper} object should be created in case of the object to
-	 * map is either an {@link SDocument} object or an {@link SCorpus} object of
-	 * the mapper should be initialized differently. <br/>
-	 * 
-	 * @param Identifier
-	 *            {@link Identifier} of the {@link SCorpus} or {@link SDocument}
-	 *            to be processed.
-	 * @return {@link PepperMapper} object to do the mapping task for object
-	 *         connected to given {@link Identifier}
-	 */
+	
 	public PepperMapper createPepperMapper(Identifier Identifier) {
 		TranscannoMapper mapper = new TranscannoMapper();
 		return (mapper);
@@ -157,11 +133,6 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 		 */
 		@Override
 		public DOCUMENT_STATUS mapSCorpus() {
-			if (getCorpus().getMetaAnnotation("date") == null) {
-				SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-				String dateString = format.format(new Date());
-				getCorpus().createMetaAnnotation(null, "date", dateString);
-			}
 			return (DOCUMENT_STATUS.COMPLETED);
 		}
 
