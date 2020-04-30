@@ -23,6 +23,7 @@ import org.corpus_tools.pepper.modules.PepperManipulator;
 import org.corpus_tools.pepper.modules.PepperMapper;
 import org.corpus_tools.pepper.modules.PepperModule;
 import org.corpus_tools.pepper.modules.PepperModuleProperties;
+import org.corpus_tools.pepper.modules.exceptions.PepperModuleException;
 import org.corpus_tools.pepper.modules.exceptions.PepperModuleNotReadyException;
 import org.corpus_tools.salt.common.SCorpus;
 import org.corpus_tools.salt.common.SDocument;
@@ -70,6 +71,7 @@ import org.slf4j.LoggerFactory;
  *	Before processing tokenises the textual data.
  * 
  * @author NadezdaOkinina
+ * @author Lionel Nicolas
  */
 @Component(name = "TranscannoManipulatorComponent", factory = "PepperManipulatorComponentFactory")
 public class TranscannoManipulator extends PepperManipulatorImpl {
@@ -85,14 +87,12 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 	 * supported formats) are a kind of a fingerprint, which should make your
 	 * module unique.
 	 */
+	//TODO update contact info
 	public TranscannoManipulator() {
 		super();
 		setName("TranscannoManipulator");
-		// TODO change suppliers e-mail address
 		setSupplierContact(URI.createURI("nadezda.okinina@eurac.edu"));
-		// TODO change suppliers homepage
 		setSupplierHomepage(URI.createURI("https://github.com/commul/transcanno-pepper-module"));
-		// TODO add a description of what your module is supposed to do
 		setDesc("Flattens the document structure and replaces dominance relations by spanning relations. In case 2 structures have the same value of tagcode (or another label), merges them into 1 span.");
 		setProperties(new TranscannoManipulatorProperties());
 	}
@@ -103,565 +103,218 @@ public class TranscannoManipulator extends PepperManipulatorImpl {
 	}
 
 	/**
-	 * TranscannoManipulator flattens the structure of an input document and replaces all the annotations by spans. These spans inherit all the attributes of the annotations they derive from.
-	 * If 2 or more annotations have the same tagcode, they are merged into 1 span.
-	 * "tagcode" is the default name of the attribute that allows to merge 2 or more annotations into 1: if the value of "tagcode" of 2 or more annotations is the same, they are merged into 1 span.
-	 *	However, it is possible to define another attribute that will allow to merge annotations when having the same value. It is defined via the AnnotationsUnifyingAttribute parameter.
-	 *	For example, if 2 XML tags with the same value of "id" should be merged together, while launching the TranscannoManipulator, we will define: AnnotationsUnifyingAttribute=id
-	 *
-	 *	Before processing tokenises the textual data.
+	 * TranscannoManipulator takes as input a salt structure created importing transcanno with the GenericXMLImporter. and onvert  flattens the structure of an input document and replaces all the annotations by spans. These spans inherit all the attributes of the annotations they derive from.
+	 * It does three things:
+	 * - it merges into a SSPan and remove the nodes (SToken/SSpan/SStructure) that have the same value for 'annotationsUnifyingAttribute' annotation (see propertes).
+	 * - it converts all remaining SSTructure into SSpans spanning the same STokens, 
+	 * - it displaces  all annotations present on a SToken into a new SSPan coverging this SToken only.
 	 */
-	public static class TranscannoMapper extends PepperMapperImpl implements GraphTraverseHandler {
-		//Will contain the name of the label that will allow to merge 2 or more structures, if they have the same value of this label.
-		private String annotationsUnifyingAttribute;
-		
-		/**
-		 * Constructor of TranscannoMapper.
-		 * Initialises the annotationsUnifyingAttribute:
-		 * 		either with the value entered by the user or with the default value "tagcode".
-		 */
+	public static class TranscannoMapper extends PepperMapperImpl{
+
 		public TranscannoMapper() {
 			super();
-			annotationsUnifyingAttribute = new TranscannoManipulatorProperties().getAnnotationsUnifyingAttribute();
-			if (annotationsUnifyingAttribute==null){
-				annotationsUnifyingAttribute = "tagcode";
-			}
 		}
 		
-		/**
-		 * Creates meta annotations, if not already exists
-		 */
-		@Override
-		public DOCUMENT_STATUS mapSCorpus() {
-			return (DOCUMENT_STATUS.COMPLETED);
-		}
-
-		/**
-		 * Flattens the document structure.
-		 * Replaces structures by spans.
-		 * If 2 or more structures have identical tagcodes (or values of another, user-specified, attribute(=label)), they are replaced by 1 span.
-		 * Before processing tokenises the textual data.
-		 */
+	
 		@Override
 		public DOCUMENT_STATUS mapSDocument() {
-			try{
-				SDocument doc = getDocument();
-				SDocumentGraph docGraph = doc.getDocumentGraph();
-				//Tokenises the textual data
-				docGraph.tokenize();
-
-				//Transform into structures with name "line" the divs that don't contain annotations inside and therefore were not transformed into structures my GenericXMLImporter, but were transformed into spans
-				transformLineSpansWithoutAnnotationsIntoStructures(docGraph);
-
-				//Will contain nodes (structures and tokens) with identical tagcodes
-				HashMap<String, List <SNode> > hashmapIdenticalTagcodeSTokens = new HashMap<String, List <SNode>>();
-				//Have to find structures and tokens, not only the ones or the others
-
-				List <SNode> sNodes = getDocument().getDocumentGraph().getNodes();
+			SDocument doc = getDocument();
+			SDocumentGraph docGraph = doc.getDocumentGraph();
+			
+			String annotationsUnifyingAttribute = new TranscannoManipulatorProperties().getAnnotationsUnifyingAttribute();
+			
+			// The list of nodes that will be duplicated and adapted that can later be removed
+			ArrayList<SNode> nodesToRemove = new ArrayList<SNode>();
+						
+			// Step 1 : identifying the nodes that have the same value for the 'annotationsUnifyingAttribute' annotation and the ones that don't
+			HashMap<String, ArrayList <SNode> > hashmapIdenticalTagcodeSTokens = new HashMap<String, ArrayList<SNode>>();
+			ArrayList<SNode> otherSNodes = new ArrayList<SNode>();
+			for (SNode sNode: docGraph.getNodes()){
 				
-				//Fill the hashmap with nodes having identical tagcodes
-				fillHashMapOfNodesWithIdenticalTagcodes(hashmapIdenticalTagcodeSTokens, sNodes);
-
-				//Create a span for each list of nodes having identical tagcodes and associate the tokens (pointing to words of text) to this span
-				createSpansForIdenticalTagcodes(hashmapIdenticalTagcodeSTokens, docGraph);
-
-				//Replace all structures by spans
-				replaceStructuresWithSpans(docGraph);
-
-				//Remove duplicate tokens
-				removeDuplicateTokens(docGraph);
-
-				List <SToken> tokens = docGraph.getTokens();
-				//Delete annotations from tokens
-				for(SToken tok: tokens){
-					tok.removeAll();
-				}
-
-				//Remove spans with tagcodes
-				List <SSpan> spans = docGraph.getSpans();
-				for (SNode span : spans){
-					if (span.getAnnotation(annotationsUnifyingAttribute)!=null){
-						span.removeAll();
+				boolean hasUnifyingAttr = false;
+				for(SAnnotation sAnno: sNode.getAnnotations()){
+					if(sAnno.getName().equals(annotationsUnifyingAttribute)) {
+						if(!hashmapIdenticalTagcodeSTokens.containsKey(sAnno.getValue())){
+							hashmapIdenticalTagcodeSTokens.put(sAnno.getValue_STEXT(), new ArrayList<SNode>());
+						}
+						hashmapIdenticalTagcodeSTokens.get(sAnno.getValue_STEXT()).add(sNode);
+						sNode.removeLabel(sAnno.getNamespace(), sAnno.getName());
+						hasUnifyingAttr = true;
+						break;
 					}
 				}
-			}catch (NullPointerException npe){
-				logger.error("The XML document is empty. " + npe.toString());
+				if(hasUnifyingAttr == false) {
+					otherSNodes.add(sNode);
+				}
 			}
+			
+			ArrayList<String> tagCodesToRemove = new ArrayList<String>(); 
+			for(String tagCodeValue: hashmapIdenticalTagcodeSTokens.keySet()){
+				if(hashmapIdenticalTagcodeSTokens.get(tagCodeValue).size() == 1) {
+					otherSNodes.add(hashmapIdenticalTagcodeSTokens.get(tagCodeValue).get(0));
+					tagCodesToRemove.add(tagCodeValue);
+				}
+			}
+			
+			for(String tagCodeToRemove : tagCodesToRemove) {
+				hashmapIdenticalTagcodeSTokens.remove(tagCodeToRemove);
+			}
+			tagCodesToRemove.clear();
+			
+			// Step 2 : creatring merged version of the nodes that have a same tagcode and the same set of annotations 
+			Hashtable<SNode,Hashtable<SToken,Boolean>> coverage = new Hashtable<SNode, Hashtable<SToken,Boolean>>();
+			for(String tagcode: hashmapIdenticalTagcodeSTokens.keySet()) {
+				SNode mainSNode = null;
+				Set<SLayer> mainLayerList = null;
+				Hashtable<SToken, Boolean> hashTokensCovered = new Hashtable<SToken, Boolean>();
+				
+				for(SNode sNode: hashmapIdenticalTagcodeSTokens.get(tagcode)) {
+					findCoverage(coverage,sNode);
+					for(SToken sToken: coverage.get(sNode).keySet()) {
+						hashTokensCovered.put(sToken, true);
+					}
+					
+					if(mainSNode == null) {
+						mainSNode = sNode;
+						mainLayerList = sNode.getLayers();
+					}else {
+						for(SAnnotation sAnno: sNode.getAnnotations()) {
+							if((mainSNode.getAnnotation(sAnno.getNamespace(), sAnno.getName()) == null)
+								|| (!mainSNode.getAnnotation(sAnno.getNamespace(), sAnno.getName()).getValue().equals(sAnno.getValue()))) {
+								throw new PepperModuleException("Data issue: A sNode to merge has an Annotation with no equivalent on the other nodes it should be merged with... "+sAnno+" Main "+mainSNode+" /// "+mainSNode.getAnnotation(sAnno.getNamespace(), sAnno.getName())+" /// "+mainSNode.getAnnotation(sAnno.getNamespace(), sAnno.getName()).equals(sAnno.getValue()));
+							}
+						}
+					}
+						
+					if(!(sNode instanceof SToken)) {
+						nodesToRemove.add(sNode);
+					}
+				}
+
+				ArrayList<SToken> tokensCovered = new ArrayList<SToken>(hashTokensCovered.keySet());
+				SSpan copySpan = docGraph.createSpan(tokensCovered);
+				for(SAnnotation sAnno: mainSNode.getAnnotations()) {
+					copySpan.createAnnotation(sAnno.getNamespace(),sAnno.getName(),sAnno.getValue());
+				}
+				docGraph.addNode(copySpan);
+				for(SLayer sLayer: mainLayerList){
+					sLayer.addNode(copySpan);
+				}
+				
+			}
+			
+			// Step 3 : Shaping the SNodes that don't need to be merged into one 
+			
+			for(SNode sNode: otherSNodes){
+				if(sNode instanceof SStructure) {
+					if(!sNode.getName().equals("root")) { //all except the root
+						findCoverage(coverage,sNode);
+						
+						ArrayList<SToken> tokensCovered = new ArrayList<SToken>(coverage.get(sNode).keySet());
+						if(tokensCovered.size() != 0){
+							SSpan copySpan = docGraph.createSpan(tokensCovered);
+							for(SAnnotation sAnno: sNode.getAnnotations()) {
+								copySpan.createAnnotation(sAnno.getNamespace(),sAnno.getName(),sAnno.getValue());
+							}
+							
+							//System.out.println("Adding "+copySpan);
+							docGraph.addNode(copySpan);
+							for(SLayer sLayer: sNode.getLayers()){
+								sLayer.addNode(copySpan);
+							}
+						}
+					}
+					
+					nodesToRemove.add(sNode);
+				}else if(sNode instanceof SToken) {
+					if(sNode.getAnnotations().size() != 0) {
+						ArrayList<SToken> tokensCovered = new ArrayList<SToken>();
+						tokensCovered.add((SToken) sNode);
+						
+						SSpan copySpan = docGraph.createSpan(tokensCovered);
+						for(SAnnotation sAnno: sNode.getAnnotations()) {
+							copySpan.createAnnotation(sAnno.getNamespace(),sAnno.getName(),sAnno.getValue());
+						}
+						sNode.removeAll();
+							
+						//System.out.println("Adding "+copySpan);
+						docGraph.addNode(copySpan);
+						for(SLayer sLayer: sNode.getLayers()){
+							sLayer.addNode(copySpan);
+						}
+					}
+				}else {
+					// Do nothing 
+					
+				}
+			}
+			
+			// Step 4 : removing the nodes that have been changed/adapted 
+			
+			for(SNode sNode: nodesToRemove){
+				for(SRelation sRel: sNode.getOutRelations()) {
+					if((sNode instanceof SStructure) && (sRel instanceof SDominanceRelation)){
+						docGraph.removeRelation(sRel);
+					}else if((sNode instanceof SSpan) && (sRel instanceof SSpanningRelation)){
+						docGraph.removeRelation(sRel);
+					}else if((sNode instanceof SToken) && (sRel instanceof STextualRelation)){
+						//do nothing
+					}else {
+						//unforeseen type of SRelation, it is not critical but worth giving a warning.
+						logger.warn("Unkown type of SRelation met on a node '"+sNode+"'to discard after merging => "+sRel);
+					}
+				}
+			
+				for(SLayer sLayer: sNode.getLayers()){
+					sLayer.removeNode(sNode);
+				}
+				docGraph.removeNode(sNode);
+			}
+			
+			List <SToken> tokens = docGraph.getTokens();
+			//Delete annotations from tokens
+			for(SToken tok: tokens){
+				tok.removeAll();
+			}
+
 			return (DOCUMENT_STATUS.COMPLETED);
 		}
 		
-		/**
-		 * Transform into structures with name "line"
-		 * the divs that don't contain annotations inside and therefore were not transformed into structures my GenericXMLImporter,
-		 * but were transformed into spans.
-		 * @param  docGraph  document graph of the document
-		 */
-		private void transformLineSpansWithoutAnnotationsIntoStructures(SDocumentGraph docGraph){
-			boolean breakNow;
-			SStructure structure;
-			List <SSpan> spans = docGraph.getSpans();
-			for (SNode span : spans){
-				List <SRelation> inRelations = span.getInRelations();
-				for (SRelation inrel: inRelations){
-					breakNow = false;
-					Node struct = inrel.getSource();
-					Collection <Label> structLabels = struct.getLabels();
-					for (Label label: structLabels){
-						if(label.getName().equals("SNAME") && label.getValue().equals("p")){ //If the span is directly under <p> : page
-							structure = docGraph.createStructure((SStructuredNode)span);
-							structure.setName("div");
-							breakNow = true;
-							break;
+		private void findCoverage(Hashtable<SNode,Hashtable<SToken,Boolean>> coverage, SNode sNode){
+			Hashtable<SToken,Boolean> tokensCovered = new Hashtable<SToken,Boolean>();
+			
+			//System.out.println("In "+sNode +" rel "+sNode.getOutRelations().size());
+			
+			if(!coverage.containsKey(sNode)) {
+				if(sNode instanceof SToken) {
+					tokensCovered.put((SToken) sNode,true);
+				}else if(sNode instanceof SSpan){
+					for(SRelation sRel: sNode.getOutRelations()) {
+						if(sRel instanceof SSpanningRelation) {
+							tokensCovered.put((SToken) sRel.getTarget(),true);
 						}
 					}
-					if(breakNow){
-						break;
-					}
-					
-				}
-			}
-		}
-				
-		/**
-		 * Replaces structures by spans.
-		 * Does not take into account structures having tagcodes (= Transc&Anno annotations), because they are taken care of in a different function.
-		 * 
-		 * @param  docGraph  document graph of the document
-		 */
-		private void replaceStructuresWithSpans(SDocumentGraph docGraph){
-			List <SStructure> listStructures = docGraph.getStructures();
-			
-			//Find all the tokens contained in the structure
-			for (SStructure struct: listStructures){
-				//We exclude structures with tagcodes, because we have already taken care of them
-				//if (struct.getLabel(annotationsUnifyingAttribute)==null && !struct.getName().equals("root") && !struct.getName().equals("p")){
-				if (struct.getLabel(annotationsUnifyingAttribute)==null && !struct.getName().equals("root")){
-					List <SToken> tokensArray = new ArrayList <SToken>();
-					
-					if(struct.getName().equals("div")  && struct.getLabel("class")!=null){
-						continue;
-					}
-					
-					
-					if(struct.getName().equals("div")){
-						struct.setName("line");
-						struct.removeAll();
-						struct.createAnnotation(null, "line", "line");
-					}
-					else if(struct.getName().equals("p")){
-						struct.setName("page");
-						String pageNumber = "";
-						for (SAnnotation ann: struct.getAnnotations()){
-							if(ann.getName().equals("page_number")){
-								pageNumber = (String) ann.getValue();
+				}else if(sNode instanceof SStructure) {
+					for(SRelation sRel: sNode.getOutRelations()) {
+						//System.out.println("Yup "+sNode+" "+sRel);
+						if(sRel instanceof SDominanceRelation){
+							SStructuredNode target = (SStructuredNode) sRel.getTarget();
+							findCoverage(coverage,target);
+							
+							for(SToken sToken: coverage.get(target).keySet()) {
+								tokensCovered.put(sToken,true);
 							}
 						}
-						struct.removeAll();
-						struct.createAnnotation(null, "page_number", pageNumber);
 					}
-					
-					addTokensToList((SNode) struct, tokensArray);
-
-					//Put all those tokens into a new span
-					if (tokensArray.size() > 0){
-						createNewSpan(docGraph, (SNode) struct, tokensArray);
-					}
+				}else {
+					throw new PepperModuleException("Unforeseen use case: uable to establish the token coverage for such type of node => "+sNode);
 				}
-
+				coverage.put(sNode,tokensCovered);
+			}else {
+				//System.out.println("contain "+sNode+" "+coverage.get(sNode).keySet().size());
 			}
-			
-			//Remove all the structures
-			List<Object> list2 = listStructures.stream().collect(Collectors.toList());			
-			for (Object s: list2){
-				docGraph.removeNode((SNode) s);
-			}
-		
-			return;
+			//System.out.println("Out "+sNode);
 		}
 		
-		/**
-		 * Creates a new span overlapping a given list of tokens and having the characteristics of a given node.
-		 *  
-		 * @param  docGraph  document graph of the document
-		 * @param  mainNode  the node that will give its name, id and labels to the span that will be created
-		 * @param  overlappingTokens  list of tokens that will be overlapped by the span that will be created
-		 */
-		private void createNewSpan(SDocumentGraph docGraph, SNode mainNode, List <SToken> overlappingTokens){			
-			//create span overlaping a set of tokens        
-    		SSpan newSpan= docGraph.createSpan(overlappingTokens);
-    		/*
-    		System.out.println("\nin createNewSpan ");
-    		System.out.println("mainNode.toString(): " + mainNode.toString());
-    		System.out.println("mainNode.getName(): " + mainNode.getName());
-    		*/
-    		if(mainNode.getLabel("class")!= null){
-    			//System.out.println("mainNode.getLabel('class').getValue(): " + mainNode.getLabel("class").getValue().toString());
-    			newSpan.setName(mainNode.getLabel("class").getValue().toString().substring(7));
-    			newSpan.createAnnotation(null, mainNode.getLabel("class").getValue().toString().substring(7), mainNode.getLabel("class").getValue().toString().substring(7));
-        		
-    		}else{
-    			newSpan.setName(mainNode.getName());
-    			if(mainNode.getLabel("SNAME")!=null){
-    				newSpan.createAnnotation(null, mainNode.getLabel("SNAME").getValue().toString(), mainNode.getLabel("SNAME").getValue().toString());
-    			}
-    		}
-    		/*
-    		System.out.println("overlappingTokens.size(): " + overlappingTokens.size());
-    		System.out.println("newSpan.toString(): " + newSpan.toString());
-    		System.out.println("overlappingTokens.get(0).toString(): " + overlappingTokens.get(0).toString());
-    		*/
-    		//Give to the new span the caracteristics of the given node
-    		//newSpan.setName(mainNode.getLabel("class").getValue().toString());
-    		newSpan.setId(mainNode.getId());
-    		
-    		//newSpan.setId(mainNode.getLabel("class").getValue().toString().substring(7));
-    		
-    		//newSpan.setName(overlappingTokens.get(0).getName());
-    		//newSpan.setId(overlappingTokens.get(0).getId());
-    		/*
-    		SToken firstToken = overlappingTokens.get(0);
-    		Set <SAnnotation> tokenAnnotations = firstToken.getAnnotations();
-    		for (SAnnotation tokAnno: tokenAnnotations){
-    			System.out.println("tokAnno: " + tokAnno.getName() + " : " + tokAnno.getValue());
-    		}
-    		*/
-    		/*
-    		Collection <Label> labels = overlappingTokens.get(0).getLabels(); 
-    		for (Label l: labels){
-    			if (((String)l.getName()).equals("SNAME")){
-    				newSpan.createAnnotation(null, (String)l.getValue(), (String)l.getValue());
-    			}else if (((String)l.getName()).equals("class") || ((String)l.getName()).equals("id") || ((String)l.getName()).equals("mode") || ((String)l.getName()).equals(annotationsUnifyingAttribute) ){
-    				continue;
-    			}
-    			else{
-    				newSpan.createAnnotation(null, (String)l.getName(), (String)l.getValue());
-    			}
-    		}
-    		*/
-    		Collection <Label> labels = mainNode.getLabels();
-    		//labels = mainNode.getLabels();
-    		for (Label l: labels){
-    			if (((String)l.getName()).equals("SNAME")){
-    				//newSpan.createAnnotation(null, (String)l.getValue(), (String)l.getValue());
-    				continue;
-    			}else if (((String)l.getName()).equals("class")){
-    				//newSpan.setName(((String)l.getValue()).substring(6));
-    				continue;
-    			}else if (((String)l.getName()).equals("id") || ((String)l.getName()).equals("mode") || ((String)l.getName()).equals(annotationsUnifyingAttribute) ){
-    				continue;
-    			}
-    			else{
-    				newSpan.createAnnotation(null, (String)l.getName(), (String)l.getValue());
-    			}
-    		}
-    		
-    		//System.out.println("newSpan.toString() with annos: " + newSpan.toString());
-    		
-    		//Add the new SSpan to the documentGraph
-    		docGraph.addNode(newSpan);
-    		return;
-		}
-		
-		/**
-		 * Adds the tokens contained in the node to the list of tokens that will be in the span
-		 * 
-		 * @param  node  the node whose tokens we want to place into the list
-		 * @param  overlappingTokens  list of tokens that will be filled by the function
-		 */
-		private void addTokensToList (SNode node, List<SToken> overlappingTokens){
-			List <SRelation> nodeOutRelations = node.getOutRelations();
-			//Loop through the outgoing relations of the node having the tagcode
-        	for (SRelation rel : nodeOutRelations){
-        		String relationClass = rel.getClass().toString();
-
-        		if (relationClass.equals("class org.corpus_tools.salt.common.impl.STextualRelationImpl")){        			
-        			overlappingTokens.add((SToken)node);	
-        		}
-        		else if (relationClass.equals("class org.corpus_tools.salt.common.impl.SDominanceRelationImpl")){
-        			//Run down the tree till I find a Textual Relation
-        			SNode targetNode=(SNode)rel.getTarget();
-        			addTokensToList (targetNode, overlappingTokens);
-        		}
-        		else if (relationClass.equals("class org.corpus_tools.salt.common.impl.SSpanningRelationImpl")){
-        			//Run down the tree till I find a Textual Relation
-        			SToken targetNode=(SToken)rel.getTarget();      			
-        			addTokensToList(targetNode, overlappingTokens);
-        		}
-        	}
-        	return;
-		}
-		
-		/**
-		 * Removes duplicate tokens from the document graph.
-		 * By duplicate tokens  we intend tokens that point to exactly the same text fragment.
-		 * 
-		 * @param  docGraph  document graph of the document
-		 */	
-		private void removeDuplicateTokens(SDocumentGraph docGraph){
-			List <SToken> tokens = docGraph.getTokens();
-			
-			HashMap <String, List<SToken>> hashOfTokensWithIdenticalTextualDSReferences=new HashMap <String, List<SToken>>();
-			fillhashOfTokensWithIdenticalTextualDSReferences(hashOfTokensWithIdenticalTextualDSReferences,tokens);
-			cleanDuplicateTokens(hashOfTokensWithIdenticalTextualDSReferences, docGraph);
-			return;
-		}
-		
-		/**
-		 * Removes duplicate tokens registered in the hashmap from the document graph.
-		 * 
-		 * @param  hashOfTokensWithIdenticalTextualDSReferences  hashmap containing lists of tokens pointing to the same text fragments.
-		 * 				key: a string containing the beginning and the end positions of the TextualDS where these tokens point to
-		 * 				value: list of tokens pointing to this text fragment
-		 * @param  docGraph  document graph of the document
-		 */	
-		private void cleanDuplicateTokens(HashMap <String, List<SToken>> hashOfTokensWithIdenticalTextualDSReferences, SDocumentGraph docGraph){
-			Iterator it = hashOfTokensWithIdenticalTextualDSReferences.entrySet().iterator();
-        	while (it.hasNext()) {
-        		Map.Entry pair = (Map.Entry)it.next();
-        		List<SToken> listSTokens = (List<SToken>)pair.getValue();
-        		
-        		if(listSTokens.size()>1){
-
-        			SToken mainToken = listSTokens.get(0);
-        			List <SRelation> mainTokenInRelations = mainToken.getInRelations();
-
-        			//Transfer all the ingoing relations from the tokens to the main token
-        			for (SToken token : listSTokens){
-        				if(!token.equals(mainToken)){
-        					List <SRelation> tokenInRelations = token.getInRelations();
-
-        					for(SRelation rel: tokenInRelations){
-        						Boolean sameRel=false;
-
-        						for (SRelation mainRel: mainTokenInRelations){
-        							if(rel.equals(mainRel)){
-        								sameRel=true;
-        							}
-        						}
-
-        						if (sameRel==false){
-        							rel.setTarget(mainToken);
-        						}
-        					}
-        				}
-        			}
-
-        			//remove all tokens apart from the main token
-        			for (SToken token : listSTokens){
-        				if(!token.equals(mainToken)){
-        					docGraph.removeNode(token);
-        				}
-        			}
-
-        			//Remove all labels apart from id and SNAME from the maintoken
-        			Collection <Label> labels = mainToken.getLabels();
-        			List <String> labelsToRemove = new ArrayList <String>();
-
-        			for (Label l: labels){
-
-        				String labelName= (String)l.getName();
-
-        				if (!labelName.equals("id") && !labelName.equals("SNAME")){
-        					labelsToRemove.add(labelName);
-        				}
-        			}
-
-        			for (String la: labelsToRemove){
-        				mainToken.removeLabel(la);
-        			}
-        			
-        		}
-        	}
-		}
-		
-		/**
-		 * Fills a hashmap with lists of tokens pointing to the same text fragments.
-		 * 
-		 * @param  hashOfTokensWithIdenticalTextualDSReferences  hashmap that will contain lists of tokens pointing to the same text fragments.
-		 * 				key: a string containing the beginning and the end positions of the TextualDS where these tokens point to
-		 * 				value: list of tokens pointing to this text fragment
-		 * @param  tokens  list of tokens among which we should find duplicates: those that point to the same textual fragments
-		 */
-		private void fillhashOfTokensWithIdenticalTextualDSReferences(HashMap <String, List<SToken>> hashOfTokensWithIdenticalTextualDSReferences, List <SToken> tokens){
-			for (SToken token : tokens){
-				
-				List <SRelation> tokenOutRelations = token.getOutRelations();
-				//Loop through the outgoing relations of the node having the tagcode
-	        	for (SRelation rel : tokenOutRelations){
-
-	        		if (rel.getClass().toString().equals("class org.corpus_tools.salt.common.impl.STextualRelationImpl")){
-	        			//Collect information about the token in order to create a new one
-	        			Node textualDS = rel.getTarget();
-	        			Integer start=null;
-	        			Integer end=null;
-	        			Collection <Label> relLabels = rel.getLabels();
-	        			for (Label rl : relLabels){
-	        				String rlabelName= (String)rl.getName();
-	    	            	
-	    	            	if (rlabelName.equals("SSTART")){
-	    	            		start=(Integer)rl.getValue();
-	    	            	}else if (rlabelName.equals("SEND")){
-	    	            		end=(Integer)rl.getValue();
-	    	            	}
-	        			}
-	        			
-	        			String tokenHashCode=start.toString()+":"+end.toString();
-	        			
-	        			if (hashOfTokensWithIdenticalTextualDSReferences.get(tokenHashCode)==null){
-	            			List<SToken> listSTokens = new ArrayList<SToken>();
-	            			listSTokens.add(token);
-	            			hashOfTokensWithIdenticalTextualDSReferences.put(tokenHashCode, listSTokens);
-	            		}else{
-	            			List<SToken> listSTokens = hashOfTokensWithIdenticalTextualDSReferences.get(tokenHashCode);
-	            			listSTokens.add(token);
-	            			hashOfTokensWithIdenticalTextualDSReferences.put(tokenHashCode, listSTokens);
-	            		} 
-	        		}
-	        	}
-            
-			}
-			return;
-		}
-		
-		/**
-		 * Creates spans over the tokens contained by the nodes registered in the lists of the hashmap (nodes with identical tagcodes).
-		 * 
-		 * @param  hashmapIdenticalTagcodeSTokens  hashmap containing lists of tokens pointing to the same text fragments.
-		 * 				key: a string containing the tagcode
-		 * 				value: list of nodes having this tagcode
-		 * @param  docGraph  document graph of the document
-		 */
-		private void createSpansForIdenticalTagcodes(HashMap<String, List <SNode> > hashmapIdenticalTagcodeSTokens, SDocumentGraph docGraph){
-			//Loop through the HashMap containing nodes with identical tagcodes
-        	Iterator it = hashmapIdenticalTagcodeSTokens.entrySet().iterator();
-        	while (it.hasNext()) {
-        		Map.Entry pair = (Map.Entry)it.next();
-        		List<SNode> listSNode = (List<SNode>)pair.getValue();      		
-        		SNode mainNode = listSNode.get(0);
-
-        		//Create a list of tokens contained by nodes with identical tagcodes
-        		List<SToken> overlappingTokens= new ArrayList<>();        			            
-        		for (SNode node : listSNode){
-        			addTokensToList (node, overlappingTokens);
-        		}
-
-        		//create span overlaping a set of tokens
-        		if (overlappingTokens.size() > 0 ){
-        			createNewSpan(docGraph, mainNode, overlappingTokens);
-        		}    		
-        	}
-        	return;
-		}
-		
-		
-		/**
-		 * Fills the hashmap with nodes having identical tagcodes (and also nodes with unique tagcodes).
-		 * 
-		 * @param  hashmapIdenticalTagcodeSTokens  hashmap that will contain lists of tokens pointing to the same text fragments.
-		 * 				key: a string containing the tagcode
-		 * 				value: list of nodes having this tagcode
-		 * @param	sNodes	list of nodes among which will be classified by tagcodes and registered into the hashmap
-		 */
-		private void fillHashMapOfNodesWithIdenticalTagcodes (HashMap<String, List <SNode> > hashmapIdenticalTagcodeSTokens, List <SNode> sNodes){
-			for (SNode s: sNodes){
-				
-				Collection <Label> labels = s.getLabels(); 
-				for (Label l: labels){
-					
-					String labelValue= (String)l.getValue();	            	
-	            	String labelName= (String)l.getName();
-	            	
-	            	if (labelName==annotationsUnifyingAttribute){
-	            		if (hashmapIdenticalTagcodeSTokens.get(labelValue)==null){
-	            			List<SNode> listSNodes = new ArrayList<SNode>();
-	            			//System.out.println("will be mainnode: " + s.toString());
-	            			listSNodes.add(s);
-	            			hashmapIdenticalTagcodeSTokens.put(labelValue, listSNodes);
-	            		}else{
-	            			List<SNode> listSNodes = hashmapIdenticalTagcodeSTokens.get(labelValue);
-	            			listSNodes.add(s);
-	            			hashmapIdenticalTagcodeSTokens.put(labelValue, listSNodes);
-	            		}
-	            	}
-				}
-            }
-			return;
-		}
-				
-
-		/** A map storing frequencies of annotations of processed documents. */
-		private Map<String, Integer> frequencies = new Hashtable<String, Integer>();
-
-		/**
-		 * This method is called for each node in document-structure, as long as
-		 * {@link #checkConstraint(GRAPH_TRAVERSE_TYPE, String, SRelation, SNode, long)}
-		 * returns true for this node. <br/>
-		 * In our dummy implementation it just collects frequencies of
-		 * annotations.
-		 */
-		@Override
-		public void nodeReached(GRAPH_TRAVERSE_TYPE traversalType, String traversalId, SNode currNode, SRelation sRelation, SNode fromNode, long order) {
-			if (currNode.getAnnotations().size() != 0) {
-				// step through all annotations to collect them in frequencies
-				// table
-				for (SAnnotation annotation : currNode.getAnnotations()) {
-					Integer frequence = frequencies.get(annotation.getName());
-					// if annotation hasn't been seen yet, create entry in
-					// frequencies set frequency to 0
-					if (frequence == null) {
-						frequence = 0;
-					}
-					frequence++;
-					frequencies.put(annotation.getName(), frequence);
-				}
-			}
-		}
-
-		/**
-		 * This method is called on the way back, in depth first mode it is
-		 * called for a node after all the nodes belonging to its subtree have
-		 * been visited. <br/>
-		 * In our dummy implementation, this method is not used.
-		 */
-		@Override
-		public void nodeLeft(GRAPH_TRAVERSE_TYPE traversalType, String traversalId, SNode currNode, SRelation edge, SNode fromNode, long order) {
-		}
-
-		/**
-		 * With this method you can decide if a node is supposed to be visited
-		 * by methods
-		 * {@link #nodeReached(GRAPH_TRAVERSE_TYPE, String, SNode, SRelation, SNode, long)}
-		 * and
-		 * {@link #nodeLeft(GRAPH_TRAVERSE_TYPE, String, SNode, SRelation, SNode, long)}
-		 * . In our dummy implementation for instance we do not need to visit
-		 * the nodes {@link STextualDS}.
-		 */
-		@Override
-		public boolean checkConstraint(GRAPH_TRAVERSE_TYPE traversalType, String traversalId, SRelation edge, SNode currNode, long order) {
-			if (currNode instanceof STextualDS) {
-				return (false);
-			} else {
-				return (true);
-			}
-		}
-	}
-
-	// =================================================== optional
-	// ===================================================
-	/**
-	 * <strong>OVERRIDE THIS METHOD FOR CUSTOMIZATION</strong> <br/>
-	 * This method is called by the pepper framework after initializing this
-	 * object and directly before start processing. Initializing means setting
-	 * properties {@link PepperModuleProperties}, setting temporary files,
-	 * resources etc. . returns false or throws an exception in case of
-	 * {@link PepperModule} instance is not ready for any reason.
-	 * 
-	 * @return false, {@link PepperModule} instance is not ready for any reason,
-	 *         true, else.
-	 */
-	@Override
-	public boolean isReadyToStart() throws PepperModuleNotReadyException {
-		// TODO make some initializations if necessary
-		return (super.isReadyToStart());
 	}
 }

@@ -3,3 +3,6 @@
 .settings/
 META-INF/
 bin/
+.project
+OSGI-INF/
+.gitignore
